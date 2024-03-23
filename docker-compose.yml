@@ -10,6 +10,7 @@ services:
       - POSTGRES_PASSWORD=${PGPASSWORD:?error}
     volumes:
       - db_data:/var/lib/postgresql/data
+      - ./seed/products:/docker-entrypoint-initdb.d
     ports:
       - "${PGPORT}:5432"
     healthcheck:

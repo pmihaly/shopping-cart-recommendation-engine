@@ -11,12 +11,35 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         deps = with pkgs; [ go ];
-        devDeps = with pkgs; [ postgresql ];
+        devDeps = with pkgs; [ postgresql nushell ];
+
+        sqlformat = {
+          language = "postgresql";
+          dialect = "postgresql";
+          keywordCase = "lower";
+          functionCase = "lower";
+          dataTypeCase = "lower";
+          identifierCase = "lower";
+        };
 
         treefmtEval = treefmt-nix.lib.evalModule pkgs ({ pkgs, ... }: {
           projectRootFile = "flake.nix";
           programs.nixfmt.enable = true;
           programs.gofmt.enable = true;
+          settings.formatter.sql-formatter = {
+            command = pkgs.lib.getExe pkgs.bash;
+            options = [
+              "-euc"
+              ''
+                for file in "$@"; do
+                ${pkgs.nodePackages.sql-formatter}/bin/sql-formatter --fix --config=${
+                  pkgs.writeText "config.json" (builtins.toJSON sqlformat)
+                } $file
+                done
+              ''
+            ];
+            includes = [ "*.sql" ];
+          };
         });
       in {
         packages.default = pkgs.buildGoModule {
