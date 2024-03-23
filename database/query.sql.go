@@ -7,22 +7,91 @@ package database
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const listProducts = `-- name: ListProducts :many
-SELECT id, name, description, category, image_url, price FROM product
-LIMIT 100
+SELECT id, name, description, category, image_url, price
+FROM product
+OFFSET $1
+LIMIT $2
 `
 
-func (q *Queries) ListProducts(ctx context.Context) ([]Product, error) {
-	rows, err := q.db.Query(ctx, listProducts)
+type ListProductsParams struct {
+	Skip int32
+	Take int32
+}
+
+type ListProductsRow struct {
+	ID          pgtype.UUID
+	Name        string
+	Description string
+	Category    []string
+	ImageUrl    string
+	Price       int32
+}
+
+func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]ListProductsRow, error) {
+	rows, err := q.db.Query(ctx, listProducts, arg.Skip, arg.Take)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Product
+	items := []ListProductsRow{}
 	for rows.Next() {
-		var i Product
+		var i ListProductsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Category,
+			&i.ImageUrl,
+			&i.Price,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchProducts = `-- name: SearchProducts :many
+SELECT id, name, description, category, image_url, price
+FROM product
+WHERE name_search @@ websearch_to_tsquery('simple', $1)
+   OR description_search @@ websearch_to_tsquery('simple', $1)
+OFFSET $2
+LIMIT $3
+`
+
+type SearchProductsParams struct {
+	SearchValue string
+	Skip        int32
+	Take        int32
+}
+
+type SearchProductsRow struct {
+	ID          pgtype.UUID
+	Name        string
+	Description string
+	Category    []string
+	ImageUrl    string
+	Price       int32
+}
+
+func (q *Queries) SearchProducts(ctx context.Context, arg SearchProductsParams) ([]SearchProductsRow, error) {
+	rows, err := q.db.Query(ctx, searchProducts, arg.SearchValue, arg.Skip, arg.Take)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SearchProductsRow{}
+	for rows.Next() {
+		var i SearchProductsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,

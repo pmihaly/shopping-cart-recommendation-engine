@@ -7,9 +7,9 @@
 
 - [x] list of products in postgres
 
-- [ ] products list endpoint
+- [x] products list endpoint
 
-- [ ] full text searching of products
+- [x] full text searching of products
 
 - [ ] using neo4j for recommendation
     - recommends every product with a limit

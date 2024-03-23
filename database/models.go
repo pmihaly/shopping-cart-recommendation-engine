@@ -9,10 +9,12 @@ import (
 )
 
 type Product struct {
-	ID          pgtype.UUID
-	Name        string
-	Description string
-	Category    []string
-	ImageUrl    string
-	Price       int32
+	ID                pgtype.UUID
+	Name              string
+	Description       string
+	Category          []string
+	ImageUrl          string
+	Price             int32
+	NameSearch        interface{}
+	DescriptionSearch interface{}
 }
