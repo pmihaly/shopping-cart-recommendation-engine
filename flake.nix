@@ -60,12 +60,16 @@
           formatting = treefmtEval.config.build.check self;
         };
 
-        devShell = nixpkgs.legacyPackages.${system}.mkShell {
+        devShell = nixpkgs.legacyPackages.${system}.mkShell rec {
           PGHOST = "127.0.0.1";
           PGPORT = 5432;
           PGDATABASE = "shopping-cart-recommendation-engine";
           PGUSER = "postgres";
           PGPASSWORD = "hunter2";
+
+          POSTGRES_URL = "postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${
+              builtins.toString PGPORT
+            }/${PGDATABASE}";
 
           inherit (self.checks.${system}.pre-commit-check) shellHook;
           buildInputs = deps ++ devDeps;

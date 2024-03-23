@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/jackc/pgx/v5"
 
@@ -12,7 +13,7 @@ import (
 func run() error {
 	ctx := context.Background()
 
-	conn, err := pgx.Connect(ctx, "user=postgres password=hunter2 dbname=shopping-cart-recommendation-engine")
+	conn, err := pgx.Connect(ctx, os.Getenv("POSTGRES_URL"))
 	if err != nil {
 		return err
 	}
