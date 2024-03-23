@@ -9,7 +9,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"mihaly.codes/shopping-cart-recommendation-engine/v2/database"
+	"mihaly.codes/shopping-cart-recommendation-engine/database"
 )
 
 func main() {
