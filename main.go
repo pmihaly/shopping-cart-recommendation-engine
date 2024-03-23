@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/jackc/pgx/v5"
@@ -10,28 +12,36 @@ import (
 	"mihaly.codes/shopping-cart-recommendation-engine/v2/database"
 )
 
-func run() error {
+func main() {
 	ctx := context.Background()
 
 	conn, err := pgx.Connect(ctx, os.Getenv("POSTGRES_URL"))
 	if err != nil {
-		return err
+		log.Fatalf("failed to connect to PostgreSQL: %v", err)
 	}
 	defer conn.Close(ctx)
 
 	queries := database.New(conn)
 
-	products, err := queries.ListProducts(ctx)
-	if err != nil {
-		return err
-	}
-	log.Println(products)
+	http.HandleFunc("/products", func(w http.ResponseWriter, req *http.Request) {
+		products, err := queries.ListProducts(ctx)
+		if err != nil {
+			http.Error(w, "failed to fetch products", http.StatusInternalServerError)
+			return
+		}
 
-	return nil
-}
+		responseJSON, err := json.Marshal(products)
+		if err != nil {
+			http.Error(w, "failed to marshal response", http.StatusInternalServerError)
+			return
+		}
 
-func main() {
-	if err := run(); err != nil {
-		log.Fatal(err)
-	}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(responseJSON)
+	})
+
+	port := ":8090"
+	log.Printf("Server started at %s", port)
+	log.Fatal(http.ListenAndServe(port, nil))
 }
