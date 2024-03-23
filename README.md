@@ -24,8 +24,12 @@
 - [ ] shopping cart checkout feature
     - recommendation actually becomes collaborative
 
+- [ ] shopping cart session management (add product/get shopping cart) (frontend has no state whatsoever)
+
 ### frontend
 
 ### "production"
 
 - [ ] postgres implementation of shopping carts
+- [ ] make api lambda compatible
+- [ ] deploy to aws with cdk
