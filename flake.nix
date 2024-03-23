@@ -11,7 +11,7 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         deps = with pkgs; [ go ];
-        devDeps = with pkgs; [ ];
+        devDeps = with pkgs; [ postgresql ];
 
         treefmtEval = treefmt-nix.lib.evalModule pkgs ({ pkgs, ... }: {
           projectRootFile = "flake.nix";
@@ -38,6 +38,12 @@
         };
 
         devShell = nixpkgs.legacyPackages.${system}.mkShell {
+          PGHOST = "127.0.0.1";
+          PGPORT = 5432;
+          PGDATABASE = "shopping-cart-recommendation-engine";
+          PGUSER = "postgres";
+          PGPASSWORD = "hunter2";
+
           inherit (self.checks.${system}.pre-commit-check) shellHook;
           buildInputs = deps ++ devDeps;
         };
