@@ -26,6 +26,7 @@
           projectRootFile = "flake.nix";
           programs.nixfmt.enable = true;
           programs.gofmt.enable = true;
+          programs.yamlfmt.enable = true;
           settings.formatter.sql-formatter = {
             command = pkgs.lib.getExe pkgs.bash;
             options = [
