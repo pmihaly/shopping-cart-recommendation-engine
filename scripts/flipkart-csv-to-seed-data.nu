@@ -1,3 +1,8 @@
+def on-last [closure: closure] {
+	[...($in | drop), ($in | last | do $closure )]
+}
+
+
 def main [] {
 	let products = open flipkart_com-ecommerce_sample.csv
 	| where retail_price != ""
@@ -15,7 +20,7 @@ def main [] {
 	$products
 	| par-each { $"\('($in.uniq_id)' ,'($in.product_name | str replace --all `'` `''`)', '($in.description | str replace --all `'` `''`)', '($in.product_category_tree | to json -r | str replace --all `'` `''` | str replace `[` `{` | str replace `]` `}`)', '($in.image)', ($in.retail_price)\)," }
 	| prepend "insert into product (id, name, description, category, image_url, price) values"
-	| [...($in | drop), ($in | last | str reverse | str replace ',' ';' | str reverse )]
+	| on-last {str reverse | str replace ',' ';' | str reverse}
 	| to text
 	| save ./seed/postgres/01-products-flipkart.sql -f
 }
