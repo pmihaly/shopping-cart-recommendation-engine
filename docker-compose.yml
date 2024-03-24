@@ -28,6 +28,12 @@ services:
     volumes:
       - neo4j_data:/data
       - ./seed/neo4j:/var/lib/neo4j/import
+    command:
+      - /bin/bash
+      - -c
+      - |
+        neo4j-admin database import full --nodes import/00-products-flipkart.csv --overwrite-destination
+        /startup/docker-entrypoint.sh neo4j
     healthcheck:
       test: wget http://localhost:7474 || exit 1
       interval: 1s
