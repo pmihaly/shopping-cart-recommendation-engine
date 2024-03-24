@@ -44,7 +44,7 @@
         });
       in {
         packages.default = pkgs.buildGoModule {
-          name = "shopping-cart-recommendation-engine";
+          name = "cart-recommendation-engine";
           src = ./.;
           vendorHash = null;
           doCheck = true;
@@ -65,7 +65,7 @@
         devShell = nixpkgs.legacyPackages.${system}.mkShell rec {
           PGHOST = "127.0.0.1";
           PGPORT = 5432;
-          PGDATABASE = "shopping-cart-recommendation-engine";
+          PGDATABASE = "cart-recommendation-engine";
           PGUSER = "postgres";
           PGPASSWORD = "hunter2";
 

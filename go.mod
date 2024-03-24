@@ -1,4 +1,4 @@
-module mihaly.codes/shopping-cart-recommendation-engine
+module mihaly.codes/cart-recommendation-engine
 
 go 1.22.1
 

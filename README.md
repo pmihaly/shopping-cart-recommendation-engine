@@ -1,4 +1,4 @@
-# shopping cart recommendation engine
+# cart recommendation engine
 
 products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-products
 
@@ -16,27 +16,27 @@ products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-pro
     - recommends every product with a limit
     - nushell script also exports csv for neo4j https://neo4j.com/docs/getting-started/data-import/csv-import
 
-- [x] seeding shopping carts into neo4j
+- [x] seeding carts into neo4j
     - maybe extending list of products
 
 - [x] implementing recommendation (user based collaborative filtering)
     - https://mnoorfawi.github.io/recommendation-engine-with-neo4j
 
-- [ ] shopping cart session management (add product/get shopping cart) (frontend has no state whatsoever)
+- [ ] cart session management (add product/get cart) (frontend has no state whatsoever)
 
-- [ ] smarter seeding shopping carts and orders
+- [ ] smarter seeding carts and orders
 
-- [ ] shopping cart checkout feature
+- [ ] cart checkout feature
     - recommendation actually becomes collaborative
 
 ### frontend
 
 - [ ] main page - product list
 - [ ] adding products to shopping list
-- [ ] viewing shopping cart + "recommended for you"
+- [ ] viewing cart + "recommended for you"
 
 ### "production"
 
-- [ ] postgres implementation of shopping carts
+- [ ] postgres implementation of carts
 - [ ] make api lambda compatible
 - [ ] deploy to aws with cdk

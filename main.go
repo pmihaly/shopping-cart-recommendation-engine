@@ -10,7 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"mihaly.codes/shopping-cart-recommendation-engine/database"
+	"mihaly.codes/cart-recommendation-engine/database"
 )
 
 func main() {
@@ -102,9 +102,9 @@ func main() {
 			"user_agent", req.UserAgent(),
 		)
 
-		shoppingCartId := req.URL.Query().Get("shoppingCartId")
+		cartId := req.URL.Query().Get("cartId")
 
-		recommendedProductIds, err := recommender.GetRecommendedExtraItems(shoppingCartId)
+		recommendedProductIds, err := recommender.GetRecommendedExtraItems(cartId)
 		if err != nil {
 			http.Error(w, "failed to recommend products", http.StatusInternalServerError)
 			return

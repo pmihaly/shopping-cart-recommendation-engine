@@ -28,14 +28,14 @@ func NewExtraItemRecommender(username, password, uri string, ctx context.Context
 	}, nil
 }
 
-func (recommender ExtraItemRecommender) GetRecommendedExtraItems(shoppingCartId string) ([]string, error) {
+func (recommender ExtraItemRecommender) GetRecommendedExtraItems(cartId string) ([]string, error) {
 	result, err := neo4j.ExecuteQuery(recommender.ctx, recommender.driver,
 		`
-		MATCH (s1:ShoppingCart)-[:ORDERED]->(p:Product)
-		WHERE s1.shoppingCartId = $shoppingCartId
+		MATCH (s1:Cart)-[:ORDERED]->(p:Product)
+		WHERE s1.cartId = $cartId
 		WITH s1, collect(DISTINCT p) AS products1
 
-		MATCH (s2:ShoppingCart)-[:ORDERED]->(p:Product)
+		MATCH (s2:Cart)-[:ORDERED]->(p:Product)
 		WHERE s1 <> s2
 		WITH s1, s2, products1, collect(DISTINCT p) AS products2
 
@@ -43,7 +43,7 @@ func (recommender ExtraItemRecommender) GetRecommendedExtraItems(shoppingCartId 
 
 		WITH s1, s2, intersection, union, size(intersection) * 1.0 / size(union) AS jaccard_index
 
-		ORDER BY jaccard_index DESC, s2.shoppingCartId
+		ORDER BY jaccard_index DESC, s2.cartId
 		WITH s1, collect(s2)[..$neighborsCount] AS neighbors
 		WHERE size(neighbors) = $neighborsCount
 
@@ -53,19 +53,19 @@ func (recommender ExtraItemRecommender) GetRecommendedExtraItems(shoppingCartId 
 		WHERE NOT (s1)-[:ORDERED]->(p)
 
 		WITH s1, p, count(DISTINCT neighbor) AS countnns
-		ORDER BY s1.shoppingCartId, countnns DESC
+		ORDER BY s1.cartId, countnns DESC
 
 		RETURN collect(p.productId)[..$recommendationCount] AS recommendations
 		`,
 		map[string]any{
-			"shoppingCartId":      shoppingCartId,
+			"cartId":              cartId,
 			"neighborsCount":      25,
 			"recommendationCount": 5,
 		}, neo4j.EagerResultTransformer,
 		neo4j.ExecuteQueryWithDatabase("neo4j"))
 
 	if err != nil {
-		slog.Error("failed to run neo4j query", err, "shoppingCartId", shoppingCartId)
+		slog.Error("failed to run neo4j query", err, "cartId", cartId)
 		return make([]string, 0), err
 	}
 

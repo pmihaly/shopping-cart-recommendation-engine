@@ -26,23 +26,23 @@ def main [] {
 	| to text
 	| save ./seed/postgres/01-products-flipkart.sql -f
 
-	let shoppingCarts = seq 1 (($products | length) * 2)
-	| par-each {|shoppingCartId|
+	let carts = seq 1 (($products | length) * 2)
+	| par-each {|cartId|
 		$productsDfr
-		| dfr sample -n (random int 0..5) -s $shoppingCartId
+		| dfr sample -n (random int 0..5) -s $cartId
 		| dfr into-nu
-		| {":START_ID": $shoppingCartId, , ":END_ID": $in.uniq_id }
+		| {":START_ID": $cartId, , ":END_ID": $in.uniq_id }
 	}
 
-	$shoppingCarts
+	$carts
 	| $in.":START_ID"
-	| par-each {{"shoppingCartId:ID": $in, ":LABEL": "ShoppingCart"}}
+	| par-each {{"cartId:ID": $in, ":LABEL": "Cart"}}
 	| to csv
-	| save ./seed/neo4j/01-shopping-carts-nodes.csv -f
+	| save ./seed/neo4j/01-carts-nodes.csv -f
 
-	$shoppingCarts
+	$carts
 	| flatten
 	| to csv
-	| save ./seed/neo4j/02-shopping-carts-relationships.csv -f
+	| save ./seed/neo4j/02-carts-relationships.csv -f
 
 }
