@@ -19,7 +19,7 @@ products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-pro
 - [x] seeding shopping carts into neo4j
     - maybe extending list of products
 
-- [ ] implementing recommendation (user based collaborative filtering)
+- [x] implementing recommendation (user based collaborative filtering)
     - https://mnoorfawi.github.io/recommendation-engine-with-neo4j
 
 - [ ] shopping cart session management (add product/get shopping cart) (frontend has no state whatsoever)
