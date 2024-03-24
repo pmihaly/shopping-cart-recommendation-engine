@@ -23,11 +23,17 @@ products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-pro
     - https://mnoorfawi.github.io/recommendation-engine-with-neo4j
 
 - [ ] cart session management (add product/get cart) (frontend has no state whatsoever)
+    - `PUT/DELETE /carts/:cartId/items/:ItemId` -> stored in sql
+    - `GET /carts/:cartId/items`
 
 - [ ] smarter seeding carts and orders
 
 - [ ] cart checkout feature
     - recommendation actually becomes collaborative
+    - `PUT /carts/:cartId/checkout`
+        1. gets cart content from sql
+        1. deletes cart from sql
+        1. adds cart to recommender
 
 ### frontend
 
