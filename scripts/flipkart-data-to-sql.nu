@@ -10,5 +10,5 @@ def main [] {
 	| prepend "insert into product (name, description, category, image_url, price) values"
 	| [...($in | drop), ($in | last | str reverse | str replace ',' ';' | str reverse )]
 	| to text
-	| save seed/products/01-products-flipkart.sql -f
+	| save seed/postgres/01-products-flipkart.sql -f
 }

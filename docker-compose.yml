@@ -8,8 +8,8 @@ services:
       - POSTGRES_USER=${PGUSER:?error}
       - POSTGRES_PASSWORD=${PGPASSWORD:?error}
     volumes:
-      - db_data:/var/lib/postgresql/data
-      - ./seed/products:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+      - ./seed/postgres:/docker-entrypoint-initdb.d
     ports:
       - "${PGPORT:?error}:5432"
     healthcheck:
@@ -17,5 +17,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  neo4j:
+    container_name: neo4j
+    image: neo4j:5.18.1-community-bullseye
+    ports:
+      - 7474:7474
+      - 7687:7687
+    environment:
+      - NEO4J_AUTH=${NEO4J_AUTH:?error}
+    volumes:
+      - neo4j_data:/data
+      - ./seed/neo4j:/var/lib/neo4j/import
+    healthcheck:
+      test: wget http://localhost:7474 || exit 1
+      interval: 1s
+      timeout: 10s
+      retries: 20
+      start_period: 3s
 volumes:
-  db_data:
+  postgres_data:
+  neo4j_data:

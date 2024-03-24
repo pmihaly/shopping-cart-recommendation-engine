@@ -2,7 +2,7 @@ version: "2"
 sql:
   - engine: "postgresql"
     queries: "query.sql"
-    schema: "seed/products/00-create-table.sql"
+    schema: "seed/postgres/00-create-table.sql"
     gen:
       go:
         package: "database"

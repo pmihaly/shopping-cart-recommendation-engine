@@ -69,6 +69,8 @@
           PGUSER = "postgres";
           PGPASSWORD = "hunter2";
 
+          NEO4J_AUTH = "neo4j/supersecretpassword";
+
           POSTGRES_URL = "postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${
               builtins.toString PGPORT
             }/${PGDATABASE}";
