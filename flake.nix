@@ -48,6 +48,7 @@
           src = ./.;
           vendorHash = null;
           doCheck = true;
+          preBuild = "${pkgs.sqlc}/bin/sqlc generate";
         };
 
         checks = {
