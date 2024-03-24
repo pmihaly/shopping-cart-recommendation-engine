@@ -32,7 +32,10 @@ services:
       - /bin/bash
       - -c
       - |
-        neo4j-admin database import full --nodes import/00-products-flipkart.csv --overwrite-destination
+        neo4j-admin database import full \
+          --nodes=Product=import/00-products-flipkart.csv \
+          --nodes=ShoppingCart=import/01-shopping-carts-nodes.csv \
+          --relationships=ORDERED=import/02-shopping-carts-relationships.csv
         /startup/docker-entrypoint.sh neo4j
     healthcheck:
       test: wget http://localhost:7474 || exit 1

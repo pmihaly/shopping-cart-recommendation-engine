@@ -11,7 +11,7 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         deps = with pkgs; [ go ];
-        devDeps = with pkgs; [ postgresql nushell sqlc ];
+        devDeps = with pkgs; [ postgresql nushellFull sqlc ];
 
         sqlformat = {
           language = "postgresql";

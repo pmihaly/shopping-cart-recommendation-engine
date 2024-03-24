@@ -12,6 +12,8 @@ def main [] {
 	| update image {from json | $in.0}
 	| update retail_price {into int}
 
+	let productsDfr = $products | dfr into-df
+
 	$products
 	| par-each {{"productId:ID":  $in.uniq_id, ":LABEL": "Product"}}
 	| to csv
@@ -23,4 +25,24 @@ def main [] {
 	| on-last {str reverse | str replace ',' ';' | str reverse}
 	| to text
 	| save ./seed/postgres/01-products-flipkart.sql -f
+
+	let shoppingCarts = seq 1 (($products | length) * 2)
+	| par-each {|shoppingCartId|
+		$productsDfr
+		| dfr sample -n (random int 0..5) -s $shoppingCartId
+		| dfr into-nu
+		| {":START_ID": $shoppingCartId, , ":END_ID": $in.uniq_id }
+	}
+
+	$shoppingCarts
+	| $in.":START_ID"
+	| par-each {{"shoppingCartId:ID": $in, ":LABEL": "ShoppingCart"}}
+	| to csv
+	| save ./seed/neo4j/01-shopping-carts-nodes.csv -f
+
+	$shoppingCarts
+	| flatten
+	| to csv
+	| save ./seed/neo4j/02-shopping-carts-relationships.csv -f
+
 }
