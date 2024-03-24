@@ -21,12 +21,16 @@
 - [ ] implementing recommendation (user based collaborative filtering)
     - https://mnoorfawi.github.io/recommendation-engine-with-neo4j
 
+- [ ] shopping cart session management (add product/get shopping cart) (frontend has no state whatsoever)
+
 - [ ] shopping cart checkout feature
     - recommendation actually becomes collaborative
 
-- [ ] shopping cart session management (add product/get shopping cart) (frontend has no state whatsoever)
-
 ### frontend
+
+- [ ] main page - product list
+- [ ] adding products to shopping list
+- [ ] viewing shopping cart + "recommended for you"
 
 ### "production"
 
