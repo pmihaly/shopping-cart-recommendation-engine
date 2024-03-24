@@ -1,5 +1,6 @@
 # shopping cart recommendation engine
 
+products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-products
 
 ## todos
 
