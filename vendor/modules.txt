@@ -17,6 +17,30 @@ github.com/jackc/pgx/v5/pgconn/internal/bgreader
 github.com/jackc/pgx/v5/pgconn/internal/ctxwatch
 github.com/jackc/pgx/v5/pgproto3
 github.com/jackc/pgx/v5/pgtype
+# github.com/neo4j/neo4j-go-driver/v5 v5.18.0
+## explicit; go 1.18
+github.com/neo4j/neo4j-go-driver/v5/neo4j
+github.com/neo4j/neo4j-go-driver/v5/neo4j/auth
+github.com/neo4j/neo4j-go-driver/v5/neo4j/config
+github.com/neo4j/neo4j-go-driver/v5/neo4j/db
+github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/auth
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/bolt
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/boltagent
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/collections
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/connector
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/db
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/errorutil
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/metadata
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/packstream
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/pool
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/racing
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/retry
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/router
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/telemetry
+github.com/neo4j/neo4j-go-driver/v5/neo4j/internal/time
+github.com/neo4j/neo4j-go-driver/v5/neo4j/log
+github.com/neo4j/neo4j-go-driver/v5/neo4j/notifications
 # golang.org/x/crypto v0.17.0
 ## explicit; go 1.18
 golang.org/x/crypto/pbkdf2

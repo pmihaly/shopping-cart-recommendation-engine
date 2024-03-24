@@ -12,7 +12,7 @@ products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-pro
 
 - [x] full text searching of products
 
-- [ ] using neo4j for recommendation
+- [x] using neo4j for recommendation
     - recommends every product with a limit
     - nushell script also exports csv for neo4j https://neo4j.com/docs/getting-started/data-import/csv-import
 
