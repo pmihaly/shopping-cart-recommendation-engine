@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"mihaly.codes/cart-recommendation-engine/database"
 )
@@ -117,6 +118,107 @@ func main() {
 			return
 		}
 		responseJSON, err := json.Marshal(products)
+		if err != nil {
+			http.Error(w, "failed to marshal response", http.StatusInternalServerError)
+			slog.Error("failed to marshal response", err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(responseJSON)
+	})
+
+	http.HandleFunc("/carts/{cartId}/items/{itemId}", func(w http.ResponseWriter, req *http.Request) {
+		logger.Info(
+			"incoming request",
+			"method", req.Method,
+			"path", req.URL.RequestURI(),
+			"user_agent", req.UserAgent(),
+		)
+
+		itemId := req.PathValue("itemId")
+		var cartId pgtype.UUID
+		if err := cartId.Scan(req.PathValue("cartId")); err != nil {
+			http.Error(w, "failed to parse UUID", http.StatusInternalServerError)
+			slog.Error("failed to parse UUID", err, "cartId", req.PathValue("cartId"))
+			return
+		}
+
+		if req.Method == "PUT" {
+			tx, err := conn.Begin(ctx)
+
+			if err != nil {
+				http.Error(w, "failed begin tx", http.StatusInternalServerError)
+				slog.Error("failed begin tx", err)
+				return
+			}
+			defer tx.Rollback(ctx)
+			qtx := queries.WithTx(tx)
+
+			err = qtx.PutCart(ctx, cartId)
+
+			if err != nil {
+				http.Error(w, "failed to put cart", http.StatusInternalServerError)
+				slog.Error("failed to put cart", err)
+				return
+			}
+
+			err = qtx.PutCartItem(ctx, database.PutCartItemParams{
+				CartID:    cartId,
+				ProductID: itemId,
+			})
+
+			if err != nil {
+				http.Error(w, "failed to put cart item", http.StatusInternalServerError)
+				slog.Error("failed to put cart item", err)
+				return
+			}
+
+			tx.Commit(ctx)
+		}
+
+		if req.Method == "DELETE" {
+			err := queries.DeleteCartItem(ctx, database.DeleteCartItemParams{
+				CartID:    cartId,
+				ProductID: itemId,
+			})
+
+			if err != nil {
+				http.Error(w, "failed to delete cart", http.StatusInternalServerError)
+				slog.Error("failed to delete cart", err)
+				return
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	http.HandleFunc("/carts/{cartId}/items", func(w http.ResponseWriter, req *http.Request) {
+		logger.Info(
+			"incoming request",
+			"method", req.Method,
+			"path", req.URL.RequestURI(),
+			"user_agent", req.UserAgent(),
+		)
+
+		var cartId pgtype.UUID
+		if err := cartId.Scan(req.PathValue("cartId")); err != nil {
+			http.Error(w, "failed to parse UUID", http.StatusInternalServerError)
+			slog.Error("failed to parse UUID", err, "cartId", req.PathValue("cartId"))
+			return
+		}
+
+		cart, err := queries.GetCartItems(ctx, cartId)
+
+		if err != nil {
+			http.Error(w, "failed to get cart items", http.StatusInternalServerError)
+			slog.Error("failed to get cart items", err)
+			return
+		}
+
+		responseJSON, err := json.Marshal(cart)
 		if err != nil {
 			http.Error(w, "failed to marshal response", http.StatusInternalServerError)
 			slog.Error("failed to marshal response", err)

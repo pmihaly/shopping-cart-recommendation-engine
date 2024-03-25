@@ -22,7 +22,7 @@ products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-pro
 - [x] implementing recommendation (user based collaborative filtering)
     - https://mnoorfawi.github.io/recommendation-engine-with-neo4j
 
-- [ ] cart session management (add product/get cart) (frontend has no state whatsoever)
+- [x] cart items management (frontend has no state whatsoever)
     - `PUT/DELETE /carts/:cartId/items/:ItemId` -> stored in sql
     - `GET /carts/:cartId/items`
 
