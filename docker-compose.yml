@@ -3,6 +3,7 @@ services:
   postgres:
     image: postgres:alpine3.19
     restart: always
+    user: ${PGUSER:?error}
     environment:
       - POSTGRES_DB=${PGDATABASE:?error}
       - POSTGRES_USER=${PGUSER:?error}
