@@ -49,6 +49,6 @@ products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-pro
 
 ### "production"
 
-- [ ] postgres implementation of carts
+- [ ] postgres implementation of carts - using apache age?
 - [ ] make api lambda compatible
 - [ ] deploy to aws with cdk
