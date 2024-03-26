@@ -27,7 +27,12 @@ products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-pro
     - `GET /carts/:cartId/items`
 
 - [ ] smarter seeding carts and orders
-    - create cart profiles and use the product search endpoint
+    - separate script
+    - define cart profiles with search keywords
+    - get products by search keyword
+    - create n carts containing all products
+    - for each cart, throw out about half of the items
+    - checkout carts
 
 - [x] cart checkout feature
     - recommendation actually becomes collaborative
