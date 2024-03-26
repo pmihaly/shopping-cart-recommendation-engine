@@ -27,6 +27,7 @@ products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-pro
     - `GET /carts/:cartId/items`
 
 - [ ] smarter seeding carts and orders
+    - create cart profiles and use the product search endpoint
 
 - [x] cart checkout feature
     - recommendation actually becomes collaborative

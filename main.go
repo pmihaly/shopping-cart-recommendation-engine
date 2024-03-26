@@ -7,12 +7,18 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"mihaly.codes/cart-recommendation-engine/database"
 )
+
+type SearchProductsResult struct {
+	Items []database.SearchProductsRow
+	Count int
+}
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
@@ -77,13 +83,44 @@ func main() {
 
 		searchValue := req.URL.Query().Get("q")
 
-		products, err := queries.SearchProducts(ctx, database.SearchProductsParams{SearchValue: searchValue, Skip: 0, Take: 25})
+		skipRaw := req.URL.Query().Get("skip")
+		var skip int32
+		if skipRaw != "" {
+			skipParsed, err := strconv.Atoi(skipRaw)
+			if err != nil {
+				http.Error(w, "failed to parse skip as int", http.StatusBadRequest)
+				slog.Error("failed to parse skip as int", "skipRaw", skipRaw, "err", err)
+				return
+			}
+			skip = int32(skipParsed)
+		} else {
+			skip = 0
+		}
+
+		takeRaw := req.URL.Query().Get("take")
+		var take int32
+		if takeRaw != "" {
+			takeParsed, err := strconv.Atoi(takeRaw)
+			if err != nil {
+				http.Error(w, "failed to parse take as int", http.StatusBadRequest)
+				slog.Error("failed to parse take as int", "takeRaw", takeRaw, "err", err)
+				return
+			}
+			take = int32(takeParsed)
+		} else {
+			take = 25
+		}
+
+		products, err := queries.SearchProducts(ctx, database.SearchProductsParams{SearchValue: searchValue, Skip: skip, Take: take})
 		if err != nil {
 			http.Error(w, "failed to fetch products", http.StatusInternalServerError)
 			slog.Error("failed to fetch products", err)
 			return
 		}
-		responseJSON, err := json.Marshal(products)
+		responseJSON, err := json.Marshal(SearchProductsResult{
+			Items: products,
+			Count: len(products),
+		})
 		if err != nil {
 			http.Error(w, "failed to marshal response", http.StatusInternalServerError)
 			slog.Error("failed to marshal response", err)
