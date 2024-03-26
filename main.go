@@ -191,7 +191,6 @@ func main() {
 			}
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
 	})
 
@@ -228,6 +227,58 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(responseJSON)
+	})
+
+	http.HandleFunc("/carts/{cartId}/checkout", func(w http.ResponseWriter, req *http.Request) {
+		logger.Info(
+			"incoming request",
+			"method", req.Method,
+			"path", req.URL.RequestURI(),
+			"user_agent", req.UserAgent(),
+		)
+
+		if req.Method != "POST" {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		var cartId pgtype.UUID
+		if err := cartId.Scan(req.PathValue("cartId")); err != nil {
+			http.Error(w, "failed to parse UUID", http.StatusInternalServerError)
+			slog.Error("failed to parse UUID", err, "cartId", req.PathValue("cartId"))
+			return
+		}
+
+		cartItems, err := queries.GetCartItems(ctx, cartId)
+
+		if err != nil {
+			http.Error(w, "failed to get cart items", http.StatusInternalServerError)
+			slog.Error("failed to get cart items", err)
+			return
+		}
+
+		if len(cartItems) == 0 {
+			slog.Warn("cart has no items", "cartId", cartId, "cartItems", cartItems)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+		}
+
+		var cartItemIds []string
+
+		for _, cartItem := range cartItems {
+			cartItemIds = append(cartItemIds, cartItem.ID)
+		}
+
+		err = queries.DeleteCart(ctx, cartId)
+		if err != nil {
+			http.Error(w, "failed to delete cart", http.StatusInternalServerError)
+			slog.Error("failed to delete cart", err)
+			return
+		}
+
+		err = recommender.AddOrder(req.PathValue("cartId"), cartItemIds)
+
+		w.WriteHeader(http.StatusNoContent)
 	})
 
 	port := ":8090"

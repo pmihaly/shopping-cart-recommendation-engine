@@ -24,6 +24,10 @@ INSERT INTO cart (id)
 VALUES (sqlc.arg(cart_id))
 ON CONFLICT (id) DO NOTHING;
 
+-- name: DeleteCart :exec
+DELETE FROM cart
+WHERE id = sqlc.arg(cart_id);
+
 -- name: PutCartItem :exec
 INSERT INTO cart_items (cart_id, product_id)
 VALUES (

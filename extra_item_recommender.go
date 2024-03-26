@@ -28,6 +28,10 @@ func NewExtraItemRecommender(username, password, uri string, ctx context.Context
 	}, nil
 }
 
+func (recommender ExtraItemRecommender) Close() {
+	recommender.driver.Close(recommender.ctx)
+}
+
 func (recommender ExtraItemRecommender) GetRecommendedExtraItems(cartId string) ([]string, error) {
 	result, err := neo4j.ExecuteQuery(recommender.ctx, recommender.driver,
 		`
@@ -84,6 +88,26 @@ func (recommender ExtraItemRecommender) GetRecommendedExtraItems(cartId string) 
 	return recommendedProductIds, nil
 }
 
-func (recommender ExtraItemRecommender) Close() {
-	recommender.driver.Close(recommender.ctx)
+func (recommender ExtraItemRecommender) AddOrder(cartId string, itemIds []string) error {
+	_, err := neo4j.ExecuteQuery(recommender.ctx, recommender.driver,
+		`
+		MERGE (cart:Cart {cartId: $cartId})
+		WITH cart
+		UNWIND $itemIds AS itemId
+		MERGE (product:Product {productId: itemId})
+		MERGE (cart)-[:ORDERED]->(product)
+		`,
+		map[string]interface{}{
+			"cartId":  cartId,
+			"itemIds": itemIds,
+		}, neo4j.EagerResultTransformer,
+		neo4j.ExecuteQueryWithDatabase("neo4j"),
+	)
+
+	if err != nil {
+		slog.Error("failed to add order to neo4j", err, "cartId", cartId)
+		return err
+	}
+
+	return nil
 }

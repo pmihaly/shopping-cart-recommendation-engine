@@ -28,9 +28,9 @@ products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-pro
 
 - [ ] smarter seeding carts and orders
 
-- [ ] cart checkout feature
+- [x] cart checkout feature
     - recommendation actually becomes collaborative
-    - `PUT /carts/:cartId/checkout`
+    - `POST /carts/:cartId/checkout`
         1. gets cart content from sql
         1. deletes cart from sql
         1. adds cart to recommender
