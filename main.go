@@ -9,8 +9,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v4/pgxpool"
 
 	"mihaly.codes/cart-recommendation-engine/database"
 )
@@ -26,12 +26,12 @@ func main() {
 
 	ctx := context.Background()
 
-	conn, err := pgx.Connect(ctx, os.Getenv("POSTGRES_URL"))
+	conn, err := pgxpool.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		slog.Error("failed to connect to PostgreSQL", err)
 		os.Exit(1)
 	}
-	defer conn.Close(ctx)
+	defer conn.Close()
 
 	queries := database.New(conn)
 
@@ -175,7 +175,7 @@ func main() {
 		)
 
 		itemId := req.PathValue("itemId")
-		var cartId pgtype.UUID
+		var cartId uuid.UUID
 		if err := cartId.Scan(req.PathValue("cartId")); err != nil {
 			http.Error(w, "failed to parse UUID", http.StatusInternalServerError)
 			slog.Error("failed to parse UUID", err, "cartId", req.PathValue("cartId"))
@@ -239,7 +239,7 @@ func main() {
 			"user_agent", req.UserAgent(),
 		)
 
-		var cartId pgtype.UUID
+		var cartId uuid.UUID
 		if err := cartId.Scan(req.PathValue("cartId")); err != nil {
 			http.Error(w, "failed to parse UUID", http.StatusInternalServerError)
 			slog.Error("failed to parse UUID", err, "cartId", req.PathValue("cartId"))
@@ -279,7 +279,7 @@ func main() {
 			return
 		}
 
-		var cartId pgtype.UUID
+		var cartId uuid.UUID
 		if err := cartId.Scan(req.PathValue("cartId")); err != nil {
 			http.Error(w, "failed to parse UUID", http.StatusInternalServerError)
 			slog.Error("failed to parse UUID", err, "cartId", req.PathValue("cartId"))
@@ -295,9 +295,9 @@ func main() {
 		}
 
 		if len(cartItems) == 0 {
-			slog.Warn("cart has no items", "cartId", cartId, "cartItems", cartItems)
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
+			http.Error(w, "cart has no items", http.StatusBadRequest)
+			slog.Warn("cart has no items", err)
+			return
 		}
 
 		var cartItemIds []string
