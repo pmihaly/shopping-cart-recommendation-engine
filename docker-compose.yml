@@ -37,9 +37,7 @@ services:
       - -c
       - |
         neo4j-admin database import full \
-          --nodes=Product=import/00-products-flipkart.csv \
-          --nodes=Cart=import/01-carts-nodes.csv \
-          --relationships=ORDERED=import/02-carts-relationships.csv
+          --nodes=Product=import/00-products-flipkart.csv
         /startup/docker-entrypoint.sh neo4j
     healthcheck:
       test: wget http://localhost:7474 || exit 1

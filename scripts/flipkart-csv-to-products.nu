@@ -26,23 +26,4 @@ def main [] {
 	| to text
 	| save ./seed/postgres/01-products-flipkart.sql -f
 
-	let carts = seq 1 (($products | length) * 2)
-	| par-each {|cartId|
-		$productsDfr
-		| dfr sample -n (random int 0..5) -s $cartId
-		| dfr into-nu
-		| {":START_ID": $cartId, , ":END_ID": $in.uniq_id }
-	}
-
-	$carts
-	| $in.":START_ID"
-	| par-each {{"cartId:ID": $in, ":LABEL": "Cart"}}
-	| to csv
-	| save ./seed/neo4j/01-carts-nodes.csv -f
-
-	$carts
-	| flatten
-	| to csv
-	| save ./seed/neo4j/02-carts-relationships.csv -f
-
 }

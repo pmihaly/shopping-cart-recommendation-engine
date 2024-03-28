@@ -26,7 +26,7 @@ products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-pro
     - `PUT/DELETE /carts/:cartId/items/:ItemId` -> stored in sql
     - `GET /carts/:cartId/items`
 
-- [ ] smarter seeding carts and orders
+- [x] smarter seeding carts and orders
     - separate script
     - define cart profiles with search keywords
     - get products by search keyword

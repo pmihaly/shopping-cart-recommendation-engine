@@ -11,7 +11,12 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         deps = with pkgs; [ go ];
-        devDeps = with pkgs; [ postgresql nushellFull sqlc ];
+        scriptDeps = with pkgs; [
+          nushellFull
+          (pkgs.python312.withPackages
+            (p: [ p.httpx p.icecream p.tqdm p.uuid ]))
+        ];
+        devDeps = with pkgs; [ postgresql sqlc ] ++ scriptDeps;
 
         sqlformat = {
           language = "postgresql";
@@ -27,6 +32,7 @@
           programs.nixfmt.enable = true;
           programs.gofmt.enable = true;
           programs.yamlfmt.enable = true;
+          programs.black.enable = true;
           settings.formatter.sql-formatter = {
             command = pkgs.lib.getExe pkgs.bash;
             options = [
