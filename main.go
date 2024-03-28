@@ -47,7 +47,7 @@ func main() {
 	}
 	defer recommender.Close()
 
-	http.HandleFunc("/products", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("GET /products", func(w http.ResponseWriter, req *http.Request) {
 		logger.Info(
 			"incoming request",
 			"method", req.Method,
@@ -73,7 +73,7 @@ func main() {
 		w.Write(responseJSON)
 	})
 
-	http.HandleFunc("/products/search", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("GET /products/search", func(w http.ResponseWriter, req *http.Request) {
 		logger.Info(
 			"incoming request",
 			"method", req.Method,
@@ -132,7 +132,7 @@ func main() {
 		w.Write(responseJSON)
 	})
 
-	http.HandleFunc("/products/recommended", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("GET /products/recommended", func(w http.ResponseWriter, req *http.Request) {
 		logger.Info(
 			"incoming request",
 			"method", req.Method,
@@ -166,7 +166,7 @@ func main() {
 		w.Write(responseJSON)
 	})
 
-	http.HandleFunc("/carts/{cartId}/items/{itemId}", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("PUT /carts/{cartId}/items/{itemId}", func(w http.ResponseWriter, req *http.Request) {
 		logger.Info(
 			"incoming request",
 			"method", req.Method,
@@ -182,56 +182,71 @@ func main() {
 			return
 		}
 
-		if req.Method == "PUT" {
-			tx, err := conn.Begin(ctx)
+		tx, err := conn.Begin(ctx)
 
-			if err != nil {
-				http.Error(w, "failed begin tx", http.StatusInternalServerError)
-				slog.Error("failed begin tx", err)
-				return
-			}
-			defer tx.Rollback(ctx)
-			qtx := queries.WithTx(tx)
+		if err != nil {
+			http.Error(w, "failed begin tx", http.StatusInternalServerError)
+			slog.Error("failed begin tx", err)
+			return
+		}
+		defer tx.Rollback(ctx)
+		qtx := queries.WithTx(tx)
 
-			err = qtx.PutCart(ctx, cartId)
+		err = qtx.PutCart(ctx, cartId)
 
-			if err != nil {
-				http.Error(w, "failed to put cart", http.StatusInternalServerError)
-				slog.Error("failed to put cart", err)
-				return
-			}
-
-			err = qtx.PutCartItem(ctx, database.PutCartItemParams{
-				CartID:    cartId,
-				ProductID: itemId,
-			})
-
-			if err != nil {
-				http.Error(w, "failed to put cart item", http.StatusInternalServerError)
-				slog.Error("failed to put cart item", err)
-				return
-			}
-
-			tx.Commit(ctx)
+		if err != nil {
+			http.Error(w, "failed to put cart", http.StatusInternalServerError)
+			slog.Error("failed to put cart", err)
+			return
 		}
 
-		if req.Method == "DELETE" {
-			err := queries.DeleteCartItem(ctx, database.DeleteCartItemParams{
-				CartID:    cartId,
-				ProductID: itemId,
-			})
+		err = qtx.PutCartItem(ctx, database.PutCartItemParams{
+			CartID:    cartId,
+			ProductID: itemId,
+		})
 
-			if err != nil {
-				http.Error(w, "failed to delete cart", http.StatusInternalServerError)
-				slog.Error("failed to delete cart", err)
-				return
-			}
+		if err != nil {
+			http.Error(w, "failed to put cart item", http.StatusInternalServerError)
+			slog.Error("failed to put cart item", err)
+			return
+		}
+
+		tx.Commit(ctx)
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	http.HandleFunc("DELETE /carts/{cartId}/items/{itemId}", func(w http.ResponseWriter, req *http.Request) {
+		logger.Info(
+			"incoming request",
+			"method", req.Method,
+			"path", req.URL.RequestURI(),
+			"user_agent", req.UserAgent(),
+		)
+
+		itemId := req.PathValue("itemId")
+		var cartId uuid.UUID
+		if err := cartId.Scan(req.PathValue("cartId")); err != nil {
+			http.Error(w, "failed to parse UUID", http.StatusInternalServerError)
+			slog.Error("failed to parse UUID", err, "cartId", req.PathValue("cartId"))
+			return
+		}
+
+		err := queries.DeleteCartItem(ctx, database.DeleteCartItemParams{
+			CartID:    cartId,
+			ProductID: itemId,
+		})
+
+		if err != nil {
+			http.Error(w, "failed to delete cart", http.StatusInternalServerError)
+			slog.Error("failed to delete cart", err)
+			return
 		}
 
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	http.HandleFunc("/carts/{cartId}/items", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("GET /carts/{cartId}/items", func(w http.ResponseWriter, req *http.Request) {
 		logger.Info(
 			"incoming request",
 			"method", req.Method,
@@ -266,18 +281,13 @@ func main() {
 		w.Write(responseJSON)
 	})
 
-	http.HandleFunc("/carts/{cartId}/checkout", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("POST /carts/{cartId}/checkout", func(w http.ResponseWriter, req *http.Request) {
 		logger.Info(
 			"incoming request",
 			"method", req.Method,
 			"path", req.URL.RequestURI(),
 			"user_agent", req.UserAgent(),
 		)
-
-		if req.Method != "POST" {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
 
 		var cartId uuid.UUID
 		if err := cartId.Scan(req.PathValue("cartId")); err != nil {
