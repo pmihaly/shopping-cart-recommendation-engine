@@ -16,7 +16,7 @@
           (pkgs.python312.withPackages
             (p: [ p.httpx p.icecream p.tqdm p.uuid ]))
         ];
-        devDeps = with pkgs; [ postgresql sqlc ] ++ scriptDeps;
+        devDeps = with pkgs; [ postgresql sqlc entr ] ++ scriptDeps;
 
         sqlformat = {
           language = "postgresql";
