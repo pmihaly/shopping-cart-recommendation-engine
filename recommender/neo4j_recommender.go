@@ -1,38 +1,43 @@
-package main
+package recommender
 
 import (
 	"context"
 	"log/slog"
 
+	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
-type ExtraItemRecommender struct {
-	driver neo4j.DriverWithContext
-	ctx    context.Context
+type DeleteCart func(uuid.UUID) error
+
+type Neo4jRecommender struct {
+	driver     neo4j.DriverWithContext
+	ctx        context.Context
+	deleteCart DeleteCart
 }
 
-func NewExtraItemRecommender(username, password, uri string, ctx context.Context) (ExtraItemRecommender, error) {
+func NewNeo4jRecommender(username, password, uri string, deleteCart DeleteCart, ctx context.Context) (Neo4jRecommender, error) {
 	auth := neo4j.BasicAuth(username, password, "")
 	driver, err := neo4j.NewDriverWithContext(uri, auth)
 
 	err = driver.VerifyConnectivity(ctx)
 	if err != nil {
 		slog.Error("failed to connect to neo4j", err, "uri", uri)
-		return ExtraItemRecommender{}, err
+		return Neo4jRecommender{}, err
 	}
 
-	return ExtraItemRecommender{
+	return Neo4jRecommender{
 		driver,
 		ctx,
+		deleteCart,
 	}, nil
 }
 
-func (recommender ExtraItemRecommender) Close() {
+func (recommender Neo4jRecommender) Close() {
 	recommender.driver.Close(recommender.ctx)
 }
 
-func (recommender ExtraItemRecommender) GetRecommendedExtraItems(cartId string) ([]string, error) {
+func (recommender Neo4jRecommender) GetRecommendedItems(cartId uuid.UUID) ([]string, error) {
 	result, err := neo4j.ExecuteQuery(recommender.ctx, recommender.driver,
 		`
 		MATCH (s1:Cart)-[:ORDERED]->(p:Product)
@@ -62,7 +67,7 @@ func (recommender ExtraItemRecommender) GetRecommendedExtraItems(cartId string) 
 		RETURN collect(p.productId)[..$recommendationCount] AS recommendations
 		`,
 		map[string]any{
-			"cartId":              cartId,
+			"cartId":              cartId.String(),
 			"neighborsCount":      25,
 			"recommendationCount": 5,
 		}, neo4j.EagerResultTransformer,
@@ -88,7 +93,7 @@ func (recommender ExtraItemRecommender) GetRecommendedExtraItems(cartId string) 
 	return recommendedProductIds, nil
 }
 
-func (recommender ExtraItemRecommender) AddOrder(cartId string, itemIds []string) error {
+func (recommender Neo4jRecommender) AddOrder(cartId uuid.UUID, itemIds []string) error {
 	_, err := neo4j.ExecuteQuery(recommender.ctx, recommender.driver,
 		`
 		MERGE (cart:Cart {cartId: $cartId})
@@ -98,14 +103,19 @@ func (recommender ExtraItemRecommender) AddOrder(cartId string, itemIds []string
 		MERGE (cart)-[:ORDERED]->(product)
 		`,
 		map[string]interface{}{
-			"cartId":  cartId,
+			"cartId":  cartId.String(),
 			"itemIds": itemIds,
 		}, neo4j.EagerResultTransformer,
 		neo4j.ExecuteQueryWithDatabase("neo4j"),
 	)
-
 	if err != nil {
 		slog.Error("failed to add order to neo4j", err, "cartId", cartId)
+		return err
+	}
+
+	err = recommender.deleteCart(cartId)
+	if err != nil {
+		slog.Error("failed to delete cart", err)
 		return err
 	}
 

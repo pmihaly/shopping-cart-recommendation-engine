@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 
 	"mihaly.codes/cart-recommendation-engine/database"
+	"mihaly.codes/cart-recommendation-engine/recommender"
 )
 
 type SearchProductsResult struct {
@@ -35,17 +36,32 @@ func main() {
 
 	queries := database.New(conn)
 
-	recommender, err := NewExtraItemRecommender(
-		os.Getenv("NEO4J_USER"),
-		os.Getenv("NEO4J_PASSWORD"),
-		os.Getenv("NEO4J_URI"),
-		ctx,
-	)
+	enableNeo4j := os.Getenv("NEO4J_USER") != "" ||
+		os.Getenv("NEO4J_PASSWORD") != "" ||
+		os.Getenv("NEO4J_URI") != ""
+
+	var rec recommender.Recommender
+	if enableNeo4j {
+		rec, err = recommender.NewNeo4jRecommender(
+			os.Getenv("NEO4J_USER"),
+			os.Getenv("NEO4J_PASSWORD"),
+			os.Getenv("NEO4J_URI"),
+			func(u uuid.UUID) error { return queries.DeleteCart(ctx, u) },
+			ctx,
+		)
+	} else {
+		rec, err = recommender.NewSqlRecommender(
+			*queries,
+			ctx,
+		)
+
+	}
+
 	if err != nil {
 		slog.Error("failed to create recommender", err)
 		os.Exit(1)
 	}
-	defer recommender.Close()
+	defer rec.Close()
 
 	http.HandleFunc("GET /products", func(w http.ResponseWriter, req *http.Request) {
 		logger.Info(
@@ -132,7 +148,7 @@ func main() {
 		w.Write(responseJSON)
 	})
 
-	http.HandleFunc("GET /products/recommended/sql", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("GET /products/recommended", func(w http.ResponseWriter, req *http.Request) {
 		logger.Info(
 			"incoming request",
 			"method", req.Method,
@@ -147,52 +163,7 @@ func main() {
 			return
 		}
 
-		recommendedProductRows, err := queries.RecommendProducts(ctx, cartId)
-		if err != nil {
-			http.Error(w, "failed to recommend products", http.StatusInternalServerError)
-			slog.Error("failed to recommend products", err)
-			return
-		}
-
-		var recommendedProductIds []string
-		for _, row := range recommendedProductRows {
-			recommendedProductIds = append(recommendedProductIds, row.ProductID)
-		}
-
-		products, err := queries.GetProductsByIds(ctx, recommendedProductIds)
-		if err != nil {
-			http.Error(w, "failed to fetch products", http.StatusInternalServerError)
-			slog.Error("failed to fetch products", err)
-			return
-		}
-		responseJSON, err := json.Marshal(products)
-		if err != nil {
-			http.Error(w, "failed to marshal response", http.StatusInternalServerError)
-			slog.Error("failed to marshal response", err)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(responseJSON)
-	})
-
-	http.HandleFunc("GET /products/recommended/neo4j", func(w http.ResponseWriter, req *http.Request) {
-		logger.Info(
-			"incoming request",
-			"method", req.Method,
-			"path", req.URL.RequestURI(),
-			"user_agent", req.UserAgent(),
-		)
-
-		var cartId uuid.UUID
-		if err := cartId.Scan(req.URL.Query().Get("cartId")); err != nil {
-			http.Error(w, "failed to parse UUID", http.StatusInternalServerError)
-			slog.Error("failed to parse UUID", err, "cartId", req.PathValue("cartId"))
-			return
-		}
-
-		recommendedProductIds, err := recommender.GetRecommendedExtraItems(cartId.String())
+		recommendedProductIds, err := rec.GetRecommendedItems(cartId)
 
 		products, err := queries.GetProductsByIds(ctx, recommendedProductIds)
 		if err != nil {
@@ -362,14 +333,7 @@ func main() {
 			cartItemIds = append(cartItemIds, cartItem.ID)
 		}
 
-		// err = queries.DeleteCart(ctx, cartId)
-		// if err != nil {
-		// 	http.Error(w, "failed to delete cart", http.StatusInternalServerError)
-		// 	slog.Error("failed to delete cart", err)
-		// 	return
-		// }
-
-		err = recommender.AddOrder(req.PathValue("cartId"), cartItemIds)
+		err = rec.AddOrder(cartId, cartItemIds)
 
 		w.WriteHeader(http.StatusNoContent)
 	})
