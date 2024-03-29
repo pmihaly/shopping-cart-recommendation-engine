@@ -13,11 +13,11 @@ own.
 
 ## Features
 
-- Acquire cancellation via context standard library
-- Statistics API for monitoring pool pressure
-- No dependencies outside of standard library
-- High performance
-- 100% test coverage
+* Acquire cancellation via context standard library
+* Statistics API for monitoring pool pressure
+* No dependencies outside of standard library
+* High performance
+* 100% test coverage
 
 ## Example Usage
 
@@ -53,9 +53,9 @@ res.Release()
 
 Puddle v1 is complete. No changes are planned.
 
-- Bug reports and fixes are welcome.
-- New features will not be accepted if they can be feasibly implemented in a wrapper.
-- Performance optimizations will not be accepted unless the performance issue rises to the level of a bug.
+* Bug reports and fixes are welcome.
+* New features will not be accepted if they can be feasibly implemented in a wrapper.
+* Performance optimizations will not be accepted unless the performance issue rises to the level of a bug.
 
 ## License
 

@@ -34,19 +34,23 @@
           programs.yamlfmt.enable = true;
           programs.black.enable = true;
           programs.prettier.enable = true;
-          settings.formatter.sql-formatter = {
-            command = pkgs.lib.getExe pkgs.bash;
-            options = [
-              "-euc"
-              ''
-                for file in "$@"; do
-                ${pkgs.nodePackages.sql-formatter}/bin/sql-formatter --fix --config=${
-                  pkgs.writeText "config.json" (builtins.toJSON sqlformat)
-                } $file
-                done
-              ''
-            ];
-            includes = [ "*.sql" ];
+          settings = {
+            global.excludes = [ "vendor/*" ];
+            formatter.sql-formatter = {
+
+              command = pkgs.lib.getExe pkgs.bash;
+              options = [
+                "-euc"
+                ''
+                  for file in "$@"; do
+                  ${pkgs.nodePackages.sql-formatter}/bin/sql-formatter --fix --config=${
+                    pkgs.writeText "config.json" (builtins.toJSON sqlformat)
+                  } $file
+                  done
+                ''
+              ];
+              includes = [ "*.sql" ];
+            };
           };
         });
       in {
