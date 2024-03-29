@@ -22,11 +22,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Lint 🧹
+      - name: Check
         run: nix flake check
 
-      - name: Build 🏗️
-        run: nix build --print-build-logs
+      - name: Build lambda 🏗️
+        run: nix build .#lambdaZip --print-build-logs
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2

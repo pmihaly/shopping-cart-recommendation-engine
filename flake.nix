@@ -34,6 +34,7 @@
                 printf "%s\n" "$FIXED_PACKAGE_JSON" > package.json
               '';
             }))
+            aws-lambda-rie
           ] ++ scriptDeps;
 
         sqlformat = {
@@ -79,10 +80,12 @@
             vendorHash = null;
             doCheck = false;
             preBuild = "${pkgs.sqlc}/bin/sqlc generate";
+            tags = [ "ignore-iac" "lambda.norpc" ];
+            CGO_ENABLED = 0;
           };
 
           docker = pkgs.dockerTools.buildImage {
-            name = "cart-recommendation-engine";
+            name = "cart-recommendation-engine-docker";
             tag = "latest";
             copyToRoot = pkgs.buildEnv {
               name = "image-root";
@@ -93,6 +96,18 @@
               Cmd = [ "/bin/cart-recommendation-engine" ];
               ExposedPorts = { "8090/tcp" = { }; };
             };
+          };
+
+          lambdaZip = pkgs.stdenv.mkDerivation {
+            name = "cart-recommendation-engine-lambda";
+            src = default;
+            phases = [ "installPhase" ];
+            installPhase = ''
+              mkdir -p $out
+              cp $src/bin/lambda bootstrap
+              chmod +x bootstrap
+              ${pkgs.zip}/bin/zip -r $out/lambda.zip bootstrap
+            '';
           };
         };
 

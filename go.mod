@@ -4,8 +4,10 @@ go 1.22.1
 
 require (
 	github.com/aws/aws-cdk-go/awscdk/v2 v2.133.0
+	github.com/aws/aws-lambda-go v1.46.0
 	github.com/aws/constructs-go/constructs/v10 v10.3.0
 	github.com/aws/jsii-runtime-go v1.94.0
+	github.com/awslabs/aws-lambda-go-api-proxy v0.16.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgconn v1.14.3
 	github.com/jackc/pgx/v4 v4.18.3

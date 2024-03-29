@@ -4,15 +4,22 @@ github.com/Masterminds/semver/v3
 # github.com/aws/aws-cdk-go/awscdk/v2 v2.133.0
 ## explicit; go 1.18
 github.com/aws/aws-cdk-go/awscdk/v2
-github.com/aws/aws-cdk-go/awscdk/v2/assertions
+github.com/aws/aws-cdk-go/awscdk/v2/awsacmpca
+github.com/aws/aws-cdk-go/awscdk/v2/awsacmpca/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway
+github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awsapplicationautoscaling
 github.com/aws/aws-cdk-go/awscdk/v2/awsapplicationautoscaling/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awscertificatemanager
+github.com/aws/aws-cdk-go/awscdk/v2/awscertificatemanager/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awscloudwatch
 github.com/aws/aws-cdk-go/awscdk/v2/awscloudwatch/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awscodeguruprofiler
 github.com/aws/aws-cdk-go/awscdk/v2/awscodeguruprofiler/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awscodestarnotifications
 github.com/aws/aws-cdk-go/awscdk/v2/awscodestarnotifications/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awscognito
+github.com/aws/aws-cdk-go/awscdk/v2/awscognito/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awsec2
 github.com/aws/aws-cdk-go/awscdk/v2/awsec2/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awsecr
@@ -21,34 +28,53 @@ github.com/aws/aws-cdk-go/awscdk/v2/awsecrassets
 github.com/aws/aws-cdk-go/awscdk/v2/awsecrassets/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awsefs
 github.com/aws/aws-cdk-go/awscdk/v2/awsefs/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awselasticloadbalancingv2
+github.com/aws/aws-cdk-go/awscdk/v2/awselasticloadbalancingv2/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awsevents
 github.com/aws/aws-cdk-go/awscdk/v2/awsevents/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awsiam
 github.com/aws/aws-cdk-go/awscdk/v2/awsiam/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awskinesisfirehose
+github.com/aws/aws-cdk-go/awscdk/v2/awskinesisfirehose/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awskms
 github.com/aws/aws-cdk-go/awscdk/v2/awskms/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awslambda
 github.com/aws/aws-cdk-go/awscdk/v2/awslambda/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awslogs
 github.com/aws/aws-cdk-go/awscdk/v2/awslogs/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awsrds
+github.com/aws/aws-cdk-go/awscdk/v2/awsrds/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awsroute53
+github.com/aws/aws-cdk-go/awscdk/v2/awsroute53/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awss3
 github.com/aws/aws-cdk-go/awscdk/v2/awss3/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awss3assets
 github.com/aws/aws-cdk-go/awscdk/v2/awss3assets/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awssagemaker
+github.com/aws/aws-cdk-go/awscdk/v2/awssagemaker/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awssecretsmanager
+github.com/aws/aws-cdk-go/awscdk/v2/awssecretsmanager/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awssigner
 github.com/aws/aws-cdk-go/awscdk/v2/awssigner/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awssns
 github.com/aws/aws-cdk-go/awscdk/v2/awssns/internal
-github.com/aws/aws-cdk-go/awscdk/v2/awssnssubscriptions
-github.com/aws/aws-cdk-go/awscdk/v2/awssnssubscriptions/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awssqs
 github.com/aws/aws-cdk-go/awscdk/v2/awssqs/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awsssm
 github.com/aws/aws-cdk-go/awscdk/v2/awsssm/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awsstepfunctions
+github.com/aws/aws-cdk-go/awscdk/v2/awsstepfunctions/internal
 github.com/aws/aws-cdk-go/awscdk/v2/cloudassemblyschema
 github.com/aws/aws-cdk-go/awscdk/v2/cxapi
 github.com/aws/aws-cdk-go/awscdk/v2/internal
 github.com/aws/aws-cdk-go/awscdk/v2/jsii
+# github.com/aws/aws-lambda-go v1.46.0
+## explicit; go 1.18
+github.com/aws/aws-lambda-go/events
+github.com/aws/aws-lambda-go/lambda
+github.com/aws/aws-lambda-go/lambda/handlertrace
+github.com/aws/aws-lambda-go/lambda/messages
+github.com/aws/aws-lambda-go/lambdacontext
 # github.com/aws/constructs-go/constructs/v10 v10.3.0
 ## explicit; go 1.18
 github.com/aws/constructs-go/constructs/v10
@@ -64,6 +90,10 @@ github.com/aws/jsii-runtime-go/internal/kernel/process
 github.com/aws/jsii-runtime-go/internal/objectstore
 github.com/aws/jsii-runtime-go/internal/typeregistry
 github.com/aws/jsii-runtime-go/runtime
+# github.com/awslabs/aws-lambda-go-api-proxy v0.16.1
+## explicit; go 1.21
+github.com/awslabs/aws-lambda-go-api-proxy/core
+github.com/awslabs/aws-lambda-go-api-proxy/httpadapter
 # github.com/cdklabs/awscdk-asset-awscli-go/awscliv1/v2 v2.2.202
 ## explicit; go 1.18
 github.com/cdklabs/awscdk-asset-awscli-go/awscliv1/v2/jsii
