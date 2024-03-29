@@ -72,12 +72,28 @@
           };
         });
       in {
-        packages.default = pkgs.buildGoModule {
-          name = "cart-recommendation-engine";
-          src = ./.;
-          vendorHash = null;
-          doCheck = false;
-          preBuild = "${pkgs.sqlc}/bin/sqlc generate";
+        packages = rec {
+          default = pkgs.buildGoModule {
+            name = "cart-recommendation-engine";
+            src = ./.;
+            vendorHash = null;
+            doCheck = false;
+            preBuild = "${pkgs.sqlc}/bin/sqlc generate";
+          };
+
+          docker = pkgs.dockerTools.buildImage {
+            name = "cart-recommendation-engine";
+            tag = "latest";
+            copyToRoot = pkgs.buildEnv {
+              name = "image-root";
+              paths = [ default ];
+              pathsToLink = [ "/bin" ];
+            };
+            config = {
+              Cmd = [ "/bin/cart-recommendation-engine" ];
+              ExposedPorts = { "8090/tcp" = { }; };
+            };
+          };
         };
 
         devShell = nixpkgs.legacyPackages.${system}.mkShell rec {
