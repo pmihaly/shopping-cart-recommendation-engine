@@ -22,20 +22,6 @@ type SearchProductsResult struct {
 	Count int
 }
 
-func ChunkList[T any](lst []T, chunkSize int) [][]T {
-	var chunks [][]T
-
-	for i := 0; i < len(lst); i += chunkSize {
-		end := i + chunkSize
-		if end > len(lst) {
-			end = len(lst)
-		}
-		chunks = append(chunks, lst[i:end])
-	}
-
-	return chunks
-}
-
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
 	slog.SetDefault(logger)
