@@ -34,7 +34,7 @@ create index idx_product_description_search on product using gin (description_se
 create table cart (id uuid primary key default gen_random_uuid ());
 
 create table cart_items (
-  cart_id uuid references cart (id),
+  cart_id uuid references cart (id) on delete cascade,
   product_id varchar(32) references product (id),
   primary key (cart_id, product_id)
 );
