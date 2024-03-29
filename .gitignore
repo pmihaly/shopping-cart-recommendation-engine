@@ -4,3 +4,5 @@ cart-recommendation-engine
 .pre-commit-config.yaml
 flipkart_com-ecommerce_sample.csv
 database
+.cdk.staging
+cdk.out

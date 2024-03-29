@@ -16,7 +16,25 @@
           (pkgs.python312.withPackages
             (p: [ p.httpx p.icecream p.tqdm p.uuid ]))
         ];
-        devDeps = with pkgs; [ postgresql sqlc entr ] ++ scriptDeps;
+        devDeps = with pkgs;
+          [
+            postgresql
+            sqlc
+            entr
+            awscli2
+            (pkgs.nodePackages.aws-cdk.overrideAttrs (_: {
+              preRebuild = ''
+                substituteInPlace lib/index.js \
+                --replace 'await fs27.copy(fromFile,toFile)' 'await fs27.copy(fromFile, toFile); await fs27.chmod(toFile, 0o644);'
+                tar --to-stdout -xf $src package/package.json \
+                | ${pkgs.jq}/bin/jq '{"devDependencies"}' > /build/devDependencies.json
+              '';
+              postInstall = ''
+                FIXED_PACKAGE_JSON="$(${pkgs.jq}/bin/jq -s '.[0] * .[1]' package.json /build/devDependencies.json)"
+                printf "%s\n" "$FIXED_PACKAGE_JSON" > package.json
+              '';
+            }))
+          ] ++ scriptDeps;
 
         sqlformat = {
           language = "postgresql";
