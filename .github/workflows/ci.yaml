@@ -9,26 +9,32 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
     steps:
       - name: Install nix ❄️
-        uses: DeterminateSystems/nix-installer-action@677cbc8aa1fe7e80b1fd15243ec41d5e0c7e3669
+        uses: DeterminateSystems/nix-installer-action@v10
 
       - name: Cache nix 🧙
-        uses: DeterminateSystems/magic-nix-cache-action@a6e7fb2bdef52db3180e04f8e0ee3b4f12c2bcb9
+        uses: DeterminateSystems/magic-nix-cache-action@v4
 
       - name: Clone project 🔽
-        uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5
+        uses: actions/checkout@v4.1.1
         with:
           fetch-depth: 0
 
       - name: Lint 🧹
-        run: "nix flake check"
+        run: nix flake check
 
       - name: Build 🏗️
-        run: "nix build"
+        run: nix build --print-build-logs
 
-      - name: Upload result 🔼
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
-          name: nix-build-result
-          path: cart-recommendation-engine
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: "eu-central-1"
+
+      - name: Deploy iac
+        run: nix develop --command cdk diff && cdk deploy --require-approval never
+

@@ -35,7 +35,7 @@ func main() {
 
 	app := awscdk.NewApp(nil)
 
-	NewIacStack(app, "IacStack", &IacStackProps{
+	NewIacStack(app, "CartRecommendation", &IacStackProps{
 		awscdk.StackProps{
 			Env: env(),
 		},

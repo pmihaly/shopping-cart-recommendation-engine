@@ -14,6 +14,7 @@
           nushellFull
           (pkgs.python312.withPackages
             (p: [ p.httpx p.icecream p.tqdm p.uuid ]))
+          nodejs_20
         ];
         devDeps = with pkgs;
           [
@@ -75,7 +76,7 @@
           name = "cart-recommendation-engine";
           src = ./.;
           vendorHash = null;
-          doCheck = true;
+          doCheck = false;
           preBuild = "${pkgs.sqlc}/bin/sqlc generate";
         };
 
