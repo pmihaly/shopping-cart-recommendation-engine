@@ -132,7 +132,7 @@ func main() {
 		w.Write(responseJSON)
 	})
 
-	http.HandleFunc("GET /products/recommended", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("GET /products/recommended/sql", func(w http.ResponseWriter, req *http.Request) {
 		logger.Info(
 			"incoming request",
 			"method", req.Method,
@@ -140,13 +140,59 @@ func main() {
 			"user_agent", req.UserAgent(),
 		)
 
-		cartId := req.URL.Query().Get("cartId")
-
-		recommendedProductIds, err := recommender.GetRecommendedExtraItems(cartId)
-		if err != nil {
-			http.Error(w, "failed to recommend products", http.StatusInternalServerError)
+		var cartId uuid.UUID
+		if err := cartId.Scan(req.URL.Query().Get("cartId")); err != nil {
+			http.Error(w, "failed to parse UUID", http.StatusInternalServerError)
+			slog.Error("failed to parse UUID", err, "cartId", req.PathValue("cartId"))
 			return
 		}
+
+		recommendedProductRows, err := queries.RecommendProducts(ctx, cartId)
+		if err != nil {
+			http.Error(w, "failed to recommend products", http.StatusInternalServerError)
+			slog.Error("failed to recommend products", err)
+			return
+		}
+
+		var recommendedProductIds []string
+		for _, row := range recommendedProductRows {
+			recommendedProductIds = append(recommendedProductIds, row.ProductID)
+		}
+
+		products, err := queries.GetProductsByIds(ctx, recommendedProductIds)
+		if err != nil {
+			http.Error(w, "failed to fetch products", http.StatusInternalServerError)
+			slog.Error("failed to fetch products", err)
+			return
+		}
+		responseJSON, err := json.Marshal(products)
+		if err != nil {
+			http.Error(w, "failed to marshal response", http.StatusInternalServerError)
+			slog.Error("failed to marshal response", err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(responseJSON)
+	})
+
+	http.HandleFunc("GET /products/recommended/neo4j", func(w http.ResponseWriter, req *http.Request) {
+		logger.Info(
+			"incoming request",
+			"method", req.Method,
+			"path", req.URL.RequestURI(),
+			"user_agent", req.UserAgent(),
+		)
+
+		var cartId uuid.UUID
+		if err := cartId.Scan(req.URL.Query().Get("cartId")); err != nil {
+			http.Error(w, "failed to parse UUID", http.StatusInternalServerError)
+			slog.Error("failed to parse UUID", err, "cartId", req.PathValue("cartId"))
+			return
+		}
+
+		recommendedProductIds, err := recommender.GetRecommendedExtraItems(cartId.String())
 
 		products, err := queries.GetProductsByIds(ctx, recommendedProductIds)
 		if err != nil {
@@ -316,12 +362,12 @@ func main() {
 			cartItemIds = append(cartItemIds, cartItem.ID)
 		}
 
-		err = queries.DeleteCart(ctx, cartId)
-		if err != nil {
-			http.Error(w, "failed to delete cart", http.StatusInternalServerError)
-			slog.Error("failed to delete cart", err)
-			return
-		}
+		// err = queries.DeleteCart(ctx, cartId)
+		// if err != nil {
+		// 	http.Error(w, "failed to delete cart", http.StatusInternalServerError)
+		// 	slog.Error("failed to delete cart", err)
+		// 	return
+		// }
 
 		err = recommender.AddOrder(req.PathValue("cartId"), cartItemIds)
 
