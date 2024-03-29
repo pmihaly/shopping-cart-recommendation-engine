@@ -1,6 +1,7 @@
 -- name: ListProducts :many
 SELECT id, name, description, category, image_url, price
 FROM product
+ORDER BY RANDOM()
 OFFSET sqlc.arg(skip)
 LIMIT sqlc.arg(take);
 

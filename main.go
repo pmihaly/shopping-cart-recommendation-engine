@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"html/template"
 	"log"
 	"log/slog"
 	"net/http"
@@ -19,6 +20,20 @@ import (
 type SearchProductsResult struct {
 	Items []database.SearchProductsRow
 	Count int
+}
+
+func ChunkList[T any](lst []T, chunkSize int) [][]T {
+	var chunks [][]T
+
+	for i := 0; i < len(lst); i += chunkSize {
+		end := i + chunkSize
+		if end > len(lst) {
+			end = len(lst)
+		}
+		chunks = append(chunks, lst[i:end])
+	}
+
+	return chunks
 }
 
 func main() {
@@ -62,6 +77,29 @@ func main() {
 		os.Exit(1)
 	}
 	defer rec.Close()
+
+	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		logger.Info(
+			"incoming request",
+			"method", req.Method,
+			"path", req.URL.RequestURI(),
+			"user_agent", req.UserAgent(),
+		)
+
+		products, err := queries.ListProducts(ctx, database.ListProductsParams{Skip: 0, Take: 25})
+		if err != nil {
+			http.Error(w, "failed to fetch products", http.StatusInternalServerError)
+			slog.Error("failed to fetch products", err)
+			return
+		}
+
+		tmpl := template.Must(template.ParseFiles("./templates/index.html"))
+
+		data := map[string][]database.ListProductsRow{
+			"Product": products,
+		}
+		tmpl.Execute(w, data)
+	})
 
 	http.HandleFunc("GET /products", func(w http.ResponseWriter, req *http.Request) {
 		logger.Info(
