@@ -36,5 +36,5 @@ jobs:
           aws-region: "eu-central-1"
 
       - name: Deploy iac
-        run: nix develop --command cdk diff && cdk deploy --require-approval never
+        run: nix develop --command bash -c "cdk diff && cdk deploy --require-approval never"
 
