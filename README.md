@@ -60,4 +60,4 @@ products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-pro
   - [x] lambda
     - [x] ~~xi builds & uploads docker image to ecr~~ ci builds zip
   - [x] api gateway
-  - [ ] add initializer for rds (https://github.com/aws-samples/amazon-rds-init-cdk)
+  - [ ] initializing products and carts (weekly scheduled lambda)
