@@ -56,8 +56,8 @@ products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-pro
 
 - [x] postgres implementation of carts - using apache age?
 - [ ] deploy to aws with cdk
-  - [ ] rds
-  - [ ] lambda
-    - [ ] ci builds & uploads docker image to ecr
-  - [ ] api gateway
+  - [x] rds
+  - [x] lambda
+    - [x] ~~xi builds & uploads docker image to ecr~~ ci builds zip
+  - [x] api gateway
   - [ ] add initializer for rds (https://github.com/aws-samples/amazon-rds-init-cdk)

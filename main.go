@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log"
 	"log/slog"
@@ -10,11 +11,17 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 
 	"mihaly.codes/cart-recommendation-engine/database"
 	"mihaly.codes/cart-recommendation-engine/recommender"
+
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
 )
 
 type SearchProductsResult struct {
@@ -28,7 +35,38 @@ func main() {
 
 	ctx := context.Background()
 
-	conn, err := pgxpool.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	var password string
+	secretArn := os.Getenv("PGPASSWORD_SECRET_ARN")
+	region := os.Getenv("AWS_REGION")
+
+	var isAwsLambda = os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != ""
+
+	if isAwsLambda {
+		manager := secretsmanager.New(session.Must(session.NewSession(&aws.Config{
+			Region: aws.String(region),
+		})))
+		secret, err := manager.GetSecretValue(&secretsmanager.GetSecretValueInput{
+			SecretId: aws.String(secretArn),
+		})
+		if err != nil {
+			slog.Error("failed to get secret", err)
+			os.Exit(1)
+		}
+		password = *secret.SecretString
+	} else {
+		slog.Warn("PGPASSWORD_SECRET_ARN or AWS_REGION not set, falling back to environment variable")
+		password = os.Getenv("PGPASSWORD")
+	}
+
+	connectionString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=verify-ca",
+		os.Getenv("PGUSER"),
+		password,
+		os.Getenv("PGHOST"),
+		os.Getenv("PGPORT"),
+		os.Getenv("PGDATABASE"),
+	)
+
+	conn, err := pgxpool.Connect(context.Background(), connectionString)
 	if err != nil {
 		slog.Error("failed to connect to PostgreSQL", err)
 		os.Exit(1)
@@ -362,7 +400,12 @@ func main() {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	port := ":8090"
-	log.Printf("Server started at %s", port)
-	log.Fatal(http.ListenAndServe(port, nil))
+	if !isAwsLambda {
+		port := ":8090"
+		log.Printf("Server started at %s", port)
+
+		log.Fatal(http.ListenAndServe(port, nil))
+	} else {
+		lambda.Start(httpadapter.New(http.DefaultServeMux).ProxyWithContext)
+	}
 }

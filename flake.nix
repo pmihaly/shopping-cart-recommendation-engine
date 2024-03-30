@@ -104,7 +104,7 @@
             phases = [ "installPhase" ];
             installPhase = ''
               mkdir -p $out
-              cp $src/bin/lambda bootstrap
+              cp $src/bin/cart-recommendation-engine bootstrap
               chmod +x bootstrap
               ${pkgs.zip}/bin/zip -r $out/lambda.zip bootstrap
             '';
@@ -123,9 +123,6 @@
           NEO4J_URI = "neo4j://localhost";
 
           NEO4J_AUTH = "${NEO4J_USER}/${NEO4J_PASSWORD}";
-          POSTGRES_URL = "postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${
-              builtins.toString PGPORT
-            }/${PGDATABASE}";
 
           buildInputs = deps ++ devDeps;
         };

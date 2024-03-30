@@ -3,11 +3,10 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsec2"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awsiam"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsrds"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awss3assets"
@@ -33,18 +32,17 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 
 	dbSecret := awssecretsmanager.NewSecret(stack, jsii.String("TemplatedSecret"), &awssecretsmanager.SecretProps{
 		GenerateSecretString: &awssecretsmanager.SecretStringGenerator{
-			SecretStringTemplate: jsii.String(fmt.Sprintf("{\"username\":\"%s\"}", "postgres")),
-			GenerateStringKey:    jsii.String("password"),
-			ExcludeCharacters:    jsii.String("/@\""),
+			ExcludeCharacters: jsii.String("/@\""),
 		},
 	})
 
 	dbInstance := awsrds.NewDatabaseInstance(stack, jsii.String("PostgresInstance1"), &awsrds.DatabaseInstanceProps{
 		Engine:           awsrds.DatabaseInstanceEngine_POSTGRES(),
-		Credentials:      awsrds.Credentials_FromSecret(dbSecret, jsii.String("postgres")),
+		Credentials:      awsrds.Credentials_FromPassword(jsii.String("postgres"), dbSecret.SecretValue()),
 		Vpc:              vpc,
 		AllocatedStorage: jsii.Number(20),
 		DatabaseName:     jsii.String("CartRecomm"),
+		Port:             jsii.Number(5432),
 		InstanceType:     awsec2.InstanceType_Of(awsec2.InstanceClass_T4G, awsec2.InstanceSize_MICRO),
 	})
 
@@ -60,17 +58,23 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 		Handler: jsii.String("bootstrap.main"),
 		Vpc:     vpc,
 		Environment: &map[string]*string{
-			*jsii.String("DATABASE_URL"): jsii.String(fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
-				*dbSecret.SecretValueFromJson(jsii.String("username")).UnsafeUnwrap(),
-				*dbSecret.SecretValueFromJson(jsii.String("password")).UnsafeUnwrap(),
-				*jsii.String("postgres"),
-				*dbInstance.DbInstanceEndpointAddress(),
-				dbInstance.DbInstanceEndpointPort(),
-				*jsii.String("cart-recommendation"),
-			)),
+			*jsii.String("PGHOST"):                dbInstance.InstanceEndpoint().Hostname(),
+			*jsii.String("PGPORT"):                jsii.String("5432"),
+			*jsii.String("PGUSER"):                jsii.String("postgres"),
+			*jsii.String("PGDATABASE"):            jsii.String("CartRecomm"),
+			*jsii.String("PGPASSWORD_SECRET_ARN"): dbSecret.SecretArn(),
 		},
 		SecurityGroups: &[]awsec2.ISecurityGroup{lambdaSecurityGroup},
 	})
+
+	lambdaPolicyStatement := awsiam.NewPolicyStatement(&awsiam.PolicyStatementProps{
+		Actions:   jsii.Strings("secretsmanager:GetSecretValue"),
+		Resources: &[]*string{dbSecret.SecretArn()},
+		Effect:    awsiam.Effect_ALLOW,
+	})
+
+	lambdaRole := lambda.Role()
+	lambdaRole.AddToPrincipalPolicy(lambdaPolicyStatement)
 
 	api := awsapigateway.NewLambdaRestApi(stack, jsii.String("CartRecommApi"), &awsapigateway.LambdaRestApiProps{
 		Handler: lambda,
