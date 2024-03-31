@@ -10,6 +10,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      packages: write
     steps:
       - name: Install nix ❄️
         uses: DeterminateSystems/nix-installer-action@v10
@@ -25,9 +26,6 @@ jobs:
       - name: Check
         run: nix flake check
 
-      - name: Build lambda 🏗️
-        run: nix build .#lambdaZip --print-build-logs
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
@@ -35,6 +33,24 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: "eu-central-1"
 
+      - name: Build lambda and initdb 🏗️
+        run: |
+          nix build .#lambdaZip .#initDB  --print-build-logs
+          docker load < result-1
+
+      - name: Deploy ecr
+        run: |
+          nix develop --command bash -c "cdk deploy --require-approval never CartRecommEcrStack -O ecr.json"
+          echo "REGISTRY=$(nix-shell -p jq --run "jq -r '.CartRecommEcrStack.ApiUrl' ecr.json")" >> $GITHUB_ENV
+
+      - name: Log into ecr
+        uses: aws-actions/amazon-ecr-login@v2.0.1
+
+      - name: Push initdb
+        run: |
+          docker tag cart-recommendation-engine-initdb ${{ env.REGISTRY }}:initdb-${{ github.run_id }}
+          docker push ${{ env.REGISTRY }}:initdb-${{ github.run_id }}
+
       - name: Deploy iac
-        run: nix develop --command bash -c "cdk diff && cdk deploy --require-approval never"
+        run: nix develop --command bash -c "cdk deploy CartRecommStack --require-approval never --parameters CartRecommStack:InitDBImageTag=initdb-${{ github.run_id }}"
 

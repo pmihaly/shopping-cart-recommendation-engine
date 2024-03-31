@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsec2"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awsecr"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsiam"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsrds"
@@ -17,6 +18,25 @@ import (
 
 type IacStackProps struct {
 	awscdk.StackProps
+}
+
+func NewEcrStack(scope constructs.Construct, id string, props *awscdk.StackProps) awscdk.Stack {
+	stack := awscdk.NewStack(scope, &id, props)
+
+	repo := awsecr.NewRepository(stack, jsii.String("CartRecommRepository"), &awsecr.RepositoryProps{
+		ImageScanOnPush: jsii.Bool(false),
+		EmptyOnDelete:   jsii.Bool(true),
+		RemovalPolicy:   awscdk.RemovalPolicy_DESTROY,
+	})
+
+	awscdk.NewCfnOutput(stack, jsii.String("ApiUrl"), &awscdk.CfnOutputProps{
+		Value: repo.RepositoryUri(),
+	})
+
+	stack.ExportValue(repo.RepositoryArn(), &awscdk.ExportValueOptions{Name: jsii.String("CartRecommRepositoryArn")})
+	stack.ExportValue(repo.RepositoryName(), &awscdk.ExportValueOptions{Name: jsii.String("CartRecommRepositoryName")})
+
+	return stack
 }
 
 func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) awscdk.Stack {
@@ -31,8 +51,8 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 		NatGateways: jsii.Number(0),
 		SubnetConfiguration: &[]*awsec2.SubnetConfiguration{
 			{
-				CidrMask: jsii.Number(24),
-				Name:     jsii.String("Isolated"),
+				CidrMask:   jsii.Number(24),
+				Name:       jsii.String("Isolated"),
 				SubnetType: awsec2.SubnetType_PRIVATE_ISOLATED,
 			},
 		},
@@ -45,10 +65,10 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 	})
 
 	dbInstance := awsrds.NewDatabaseInstance(stack, jsii.String("PostgresInstance1"), &awsrds.DatabaseInstanceProps{
-		Engine:           awsrds.DatabaseInstanceEngine_POSTGRES(),
-		Credentials:      awsrds.Credentials_FromPassword(jsii.String("postgres"), dbSecret.SecretValue()),
-		Vpc:              vpc,
-		VpcSubnets:  &awsec2.SubnetSelection{
+		Engine:      awsrds.DatabaseInstanceEngine_POSTGRES(),
+		Credentials: awsrds.Credentials_FromPassword(jsii.String("postgres"), dbSecret.SecretValue()),
+		Vpc:         vpc,
+		VpcSubnets: &awsec2.SubnetSelection{
 			SubnetType: awsec2.SubnetType_PRIVATE_ISOLATED,
 		},
 		AllocatedStorage: jsii.Number(20),
@@ -68,7 +88,7 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 		Code:    awslambda.Code_FromAsset(jsii.String("result/lambda.zip"), &awss3assets.AssetOptions{}),
 		Handler: jsii.String("bootstrap.main"),
 		Vpc:     vpc,
-		VpcSubnets:  &awsec2.SubnetSelection{
+		VpcSubnets: &awsec2.SubnetSelection{
 			SubnetType: awsec2.SubnetType_PRIVATE_ISOLATED,
 		},
 		Environment: &map[string]*string{
@@ -89,6 +109,36 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 
 	lambdaRole := lambda.Role()
 	lambdaRole.AddToPrincipalPolicy(lambdaPolicyStatement)
+
+	ecrRepositoryArn := awscdk.Fn_ImportValue(jsii.String("CartRecommRepositoryArn"))
+	ecrRepositoryName := awscdk.Fn_ImportValue(jsii.String("CartRecommRepositoryName"))
+
+	ecrRepository := awsecr.Repository_FromRepositoryAttributes(stack, jsii.String("CartRecommRepository"), &awsecr.RepositoryAttributes{
+		RepositoryArn:  ecrRepositoryArn,
+		RepositoryName: ecrRepositoryName,
+	})
+
+	initdbImageTag := awscdk.NewCfnParameter(stack, jsii.String("InitDBImageTag"), &awscdk.CfnParameterProps{
+		Type: jsii.String("String"),
+		Default: jsii.String("latest"),
+	})
+
+	initdbLambda := awslambda.NewDockerImageFunction(stack, jsii.String("initDBLambda"), &awslambda.DockerImageFunctionProps{
+		Code: awslambda.DockerImageCode_FromEcr(ecrRepository, &awslambda.EcrImageCodeProps{
+			TagOrDigest: initdbImageTag.ValueAsString(),
+		}),
+		Vpc: vpc,
+		Environment: &map[string]*string{
+			*jsii.String("PGHOST"):                dbInstance.InstanceEndpoint().Hostname(),
+			*jsii.String("PGPORT"):                jsii.String("5432"),
+			*jsii.String("PGUSER"):                jsii.String("postgres"),
+			*jsii.String("PGDATABASE"):            jsii.String("CartRecomm"),
+			*jsii.String("PGPASSWORD_SECRET_ARN"): dbSecret.SecretArn(),
+		},
+		SecurityGroups: &[]awsec2.ISecurityGroup{lambdaSecurityGroup},
+	})
+
+	initdbLambda.Role().AddToPrincipalPolicy(lambdaPolicyStatement)
 
 	api := awsapigateway.NewLambdaRestApi(stack, jsii.String("CartRecommApi"), &awsapigateway.LambdaRestApiProps{
 		Handler: lambda,
@@ -117,11 +167,17 @@ func main() {
 
 	app := awscdk.NewApp(nil)
 
-	NewIacStack(app, "CartRecommStack", &IacStackProps{
+	ecrStack := NewEcrStack(app, "CartRecommEcrStack", &awscdk.StackProps{
+		Env: env(),
+	})
+
+	iacStack := NewIacStack(app, "CartRecommStack", &IacStackProps{
 		awscdk.StackProps{
 			Env: env(),
 		},
 	})
+
+	iacStack.AddDependency(ecrStack, jsii.String("ECR"))
 
 	app.Synth(nil)
 }

@@ -1,11 +1,11 @@
 import asyncio
 import itertools
-from math import floor
 import random
+from math import floor
 from uuid import uuid4
+
 from httpx import AsyncClient
 from tqdm.asyncio import tqdm_asyncio
-
 
 profiles = [
     "spongebob",

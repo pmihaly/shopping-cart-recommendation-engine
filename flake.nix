@@ -10,14 +10,19 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         deps = with pkgs; [ go ];
-        scriptDeps = with pkgs; [
-          nushellFull
-          (pkgs.python312.withPackages
-            (p: [ p.httpx p.icecream p.tqdm p.uuid ]))
-          nodejs_20
-        ];
+        scriptDeps = with pkgs; [ nushellFull nodejs_20 ];
         devDeps = with pkgs;
           [
+            (pkgs.python312.withPackages (p: [
+              p.httpx
+              p.icecream
+              p.tqdm
+              p.uuid
+              p.psycopg2
+              p.types-psycopg2
+              p.boto3
+              p.mypy-boto3-secretsmanager
+            ]))
             postgresql
             sqlc
             entr
@@ -34,7 +39,6 @@
                 printf "%s\n" "$FIXED_PACKAGE_JSON" > package.json
               '';
             }))
-            aws-lambda-rie
           ] ++ scriptDeps;
 
         sqlformat = {
@@ -52,6 +56,7 @@
           programs.gofmt.enable = true;
           programs.yamlfmt.enable = true;
           programs.black.enable = true;
+          programs.isort.enable = true;
           programs.prettier.enable = true;
           settings = {
             global.excludes = [ "vendor/*" ];
@@ -109,6 +114,20 @@
               ${pkgs.zip}/bin/zip -r $out/lambda.zip bootstrap
             '';
           };
+
+          initDB = pkgs.dockerTools.buildImage {
+            name = "cart-recommendation-engine-initdb";
+            tag = "latest";
+            copyToRoot = pkgs.buildEnv {
+              name = "image-root";
+              paths = scriptDeps ++ [ ./seed ./scripts ];
+              pathsToLink = [ "/bin" "/" ];
+            };
+            config = {
+              Cmd = [ "${pkgs.nushell}/bin/nu" ];
+              ExposedPorts = { "8090/tcp" = { }; };
+            };
+          };
         };
 
         devShell = nixpkgs.legacyPackages.${system}.mkShell rec {
@@ -123,6 +142,8 @@
           NEO4J_URI = "neo4j://localhost";
 
           NEO4J_AUTH = "${NEO4J_USER}/${NEO4J_PASSWORD}";
+
+          PYTHONPATH = "${pkgs.python312}/bin/python";
 
           buildInputs = deps ++ devDeps;
         };
