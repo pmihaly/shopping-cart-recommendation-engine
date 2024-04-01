@@ -133,7 +133,7 @@
         devShell = nixpkgs.legacyPackages.${system}.mkShell rec {
           PGHOST = "127.0.0.1";
           PGPORT = 5432;
-          PGDATABASE = "cart-recommendation-engine";
+          PGDATABASE = "cartrecommendationengine";
           PGUSER = "postgres";
           PGPASSWORD = "hunter2";
 

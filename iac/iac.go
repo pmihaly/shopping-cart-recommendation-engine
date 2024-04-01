@@ -82,7 +82,7 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 			SubnetType: awsec2.SubnetType_PRIVATE_ISOLATED,
 		},
 		AllocatedStorage: jsii.Number(20),
-		DatabaseName:     jsii.String("CartRecomm"),
+		DatabaseName:     jsii.String("cartrecommendationengine"),
 		Port:             jsii.Number(5432),
 		InstanceType:     awsec2.InstanceType_Of(awsec2.InstanceClass_T4G, awsec2.InstanceSize_MICRO),
 	})
@@ -105,7 +105,7 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 			*jsii.String("PGHOST"):                dbInstance.InstanceEndpoint().Hostname(),
 			*jsii.String("PGPORT"):                jsii.String("5432"),
 			*jsii.String("PGUSER"):                jsii.String("postgres"),
-			*jsii.String("PGDATABASE"):            jsii.String("CartRecomm"),
+			*jsii.String("PGDATABASE"):            jsii.String("cartrecommendationengine"),
 			*jsii.String("PGPASSWORD_SECRET_ARN"): dbSecret.SecretArn(),
 		},
 		SecurityGroups: &[]awsec2.ISecurityGroup{lambdaSecurityGroup},
