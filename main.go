@@ -8,6 +8,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 
@@ -60,7 +61,7 @@ func main() {
 
 	connectionString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=verify-ca",
 		os.Getenv("PGUSER"),
-		password,
+		url.QueryEscape(password),
 		os.Getenv("PGHOST"),
 		os.Getenv("PGPORT"),
 		os.Getenv("PGDATABASE"),
