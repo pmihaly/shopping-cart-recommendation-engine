@@ -28,6 +28,14 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 
 	vpc := awsec2.NewVpc(stack, jsii.String("Vpc"), &awsec2.VpcProps{
 		IpAddresses: awsec2.IpAddresses_Cidr(jsii.String("10.0.0.0/16")),
+		NatGateways: jsii.Number(0),
+		SubnetConfiguration: &[]*awsec2.SubnetConfiguration{
+			{
+				CidrMask: jsii.Number(24),
+				Name:     jsii.String("Isolated"),
+				SubnetType: awsec2.SubnetType_PRIVATE_ISOLATED,
+			},
+		},
 	})
 
 	dbSecret := awssecretsmanager.NewSecret(stack, jsii.String("TemplatedSecret"), &awssecretsmanager.SecretProps{
@@ -40,6 +48,9 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 		Engine:           awsrds.DatabaseInstanceEngine_POSTGRES(),
 		Credentials:      awsrds.Credentials_FromPassword(jsii.String("postgres"), dbSecret.SecretValue()),
 		Vpc:              vpc,
+		VpcSubnets:  &awsec2.SubnetSelection{
+			SubnetType: awsec2.SubnetType_PRIVATE_ISOLATED,
+		},
 		AllocatedStorage: jsii.Number(20),
 		DatabaseName:     jsii.String("CartRecomm"),
 		Port:             jsii.Number(5432),
@@ -57,6 +68,9 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 		Code:    awslambda.Code_FromAsset(jsii.String("result/lambda.zip"), &awss3assets.AssetOptions{}),
 		Handler: jsii.String("bootstrap.main"),
 		Vpc:     vpc,
+		VpcSubnets:  &awsec2.SubnetSelection{
+			SubnetType: awsec2.SubnetType_PRIVATE_ISOLATED,
+		},
 		Environment: &map[string]*string{
 			*jsii.String("PGHOST"):                dbInstance.InstanceEndpoint().Hostname(),
 			*jsii.String("PGPORT"):                jsii.String("5432"),
