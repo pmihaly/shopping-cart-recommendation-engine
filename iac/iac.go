@@ -165,7 +165,7 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 			*jsii.String("SERVICE_URL"):           api.Url(),
 		},
 		SecurityGroups: &[]awsec2.ISecurityGroup{lambdaSecurityGroup},
-		Timeout:        awscdk.Duration_Seconds(jsii.Number(10)),
+		Timeout:        awscdk.Duration_Seconds(jsii.Number(60)),
 	})
 
 	initdbLambda.Role().AddToPrincipalPolicy(lambdaPolicyStatement)

@@ -61,4 +61,5 @@ products yoinked from https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-pro
     - [x] ~~xi builds & uploads docker image to ecr~~ ci builds zip
   - [x] api gateway
   - [ ] initializing products and carts (weekly scheduled lambda)
+    - [ ] deleting the db - has to be in the script
   - [ ] serving frontend

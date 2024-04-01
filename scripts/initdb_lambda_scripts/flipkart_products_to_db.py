@@ -33,14 +33,24 @@ port = os.environ["PGPORT"]
 database = os.environ["PGDATABASE"]
 
 logger.info(
-    "Got environment variables", user=user, host=host, port=port, database=database
+    "Got environment variables", user=user, host=host, port=port
 )
+
+conn = psycopg2.connect(
+    user=user, password=password, host=host, port=port
+)
+cur = conn.cursor()
+logger.info("Connected to PostgreSQL")
+
+conn.autocommit = True
+
+cur.execute(f"drop database if exists {database}")
+logger.info("Deleted database", database=database)
 
 conn = psycopg2.connect(
     user=user, password=password, host=host, port=port, database=database
 )
 cur = conn.cursor()
-logger.info("Connected to PostgreSQL")
 
 sql_files = os.listdir("/postgres")
 
