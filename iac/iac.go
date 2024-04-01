@@ -7,6 +7,8 @@ import (
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsec2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsecr"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awsevents"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awseventstargets"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsiam"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsrds"
@@ -151,6 +153,17 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 	})
 
 	initdbLambda.Role().AddToPrincipalPolicy(lambdaPolicyStatement)
+
+	rule := awsevents.NewRule(stack, jsii.String("initdbSchedule"), &awsevents.RuleProps{
+		Schedule: awsevents.Schedule_Cron(
+			&awsevents.CronOptions{
+				WeekDay: jsii.String("SUN"),
+			},
+		)})
+
+	rule.AddTarget(awseventstargets.NewLambdaFunction(initdbLambda, &awseventstargets.LambdaFunctionProps{
+		RetryAttempts: jsii.Number(2),
+	}))
 
 	api := awsapigateway.NewLambdaRestApi(stack, jsii.String("CartRecommApi"), &awsapigateway.LambdaRestApiProps{
 		Handler: lambda,

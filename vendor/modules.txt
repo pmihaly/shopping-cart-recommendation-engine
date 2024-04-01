@@ -10,12 +10,20 @@ github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway
 github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awsapplicationautoscaling
 github.com/aws/aws-cdk-go/awscdk/v2/awsapplicationautoscaling/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awsautoscaling
+github.com/aws/aws-cdk-go/awscdk/v2/awsautoscaling/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awscertificatemanager
 github.com/aws/aws-cdk-go/awscdk/v2/awscertificatemanager/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awscloudwatch
 github.com/aws/aws-cdk-go/awscdk/v2/awscloudwatch/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awscodebuild
+github.com/aws/aws-cdk-go/awscdk/v2/awscodebuild/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awscodecommit
+github.com/aws/aws-cdk-go/awscdk/v2/awscodecommit/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awscodeguruprofiler
 github.com/aws/aws-cdk-go/awscdk/v2/awscodeguruprofiler/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awscodepipeline
+github.com/aws/aws-cdk-go/awscdk/v2/awscodepipeline/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awscodestarnotifications
 github.com/aws/aws-cdk-go/awscdk/v2/awscodestarnotifications/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awscognito
@@ -26,14 +34,22 @@ github.com/aws/aws-cdk-go/awscdk/v2/awsecr
 github.com/aws/aws-cdk-go/awscdk/v2/awsecr/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awsecrassets
 github.com/aws/aws-cdk-go/awscdk/v2/awsecrassets/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awsecs
+github.com/aws/aws-cdk-go/awscdk/v2/awsecs/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awsefs
 github.com/aws/aws-cdk-go/awscdk/v2/awsefs/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awselasticloadbalancing
+github.com/aws/aws-cdk-go/awscdk/v2/awselasticloadbalancing/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awselasticloadbalancingv2
 github.com/aws/aws-cdk-go/awscdk/v2/awselasticloadbalancingv2/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awsevents
 github.com/aws/aws-cdk-go/awscdk/v2/awsevents/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awseventstargets
+github.com/aws/aws-cdk-go/awscdk/v2/awseventstargets/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awsiam
 github.com/aws/aws-cdk-go/awscdk/v2/awsiam/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awskinesis
+github.com/aws/aws-cdk-go/awscdk/v2/awskinesis/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awskinesisfirehose
 github.com/aws/aws-cdk-go/awscdk/v2/awskinesisfirehose/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awskms
@@ -54,6 +70,8 @@ github.com/aws/aws-cdk-go/awscdk/v2/awssagemaker
 github.com/aws/aws-cdk-go/awscdk/v2/awssagemaker/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awssecretsmanager
 github.com/aws/aws-cdk-go/awscdk/v2/awssecretsmanager/internal
+github.com/aws/aws-cdk-go/awscdk/v2/awsservicediscovery
+github.com/aws/aws-cdk-go/awscdk/v2/awsservicediscovery/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awssigner
 github.com/aws/aws-cdk-go/awscdk/v2/awssigner/internal
 github.com/aws/aws-cdk-go/awscdk/v2/awssns
@@ -75,7 +93,7 @@ github.com/aws/aws-lambda-go/lambda
 github.com/aws/aws-lambda-go/lambda/handlertrace
 github.com/aws/aws-lambda-go/lambda/messages
 github.com/aws/aws-lambda-go/lambdacontext
-# github.com/aws/aws-sdk-go v1.47.10
+# github.com/aws/aws-sdk-go v1.51.11
 ## explicit; go 1.19
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/auth/bearer
@@ -171,10 +189,10 @@ github.com/jackc/pgpassfile
 # github.com/jackc/pgproto3/v2 v2.3.3
 ## explicit; go 1.12
 github.com/jackc/pgproto3/v2
-# github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a
+# github.com/jackc/pgservicefile v0.0.0-20231201235250-de7065d80cb9
 ## explicit; go 1.14
 github.com/jackc/pgservicefile
-# github.com/jackc/pgtype v1.14.0
+# github.com/jackc/pgtype v1.14.3
 ## explicit; go 1.13
 github.com/jackc/pgtype
 # github.com/jackc/pgx/v4 v4.18.3
@@ -227,7 +245,7 @@ github.com/yuin/goldmark/renderer
 github.com/yuin/goldmark/renderer/html
 github.com/yuin/goldmark/text
 github.com/yuin/goldmark/util
-# golang.org/x/crypto v0.20.0
+# golang.org/x/crypto v0.21.0
 ## explicit; go 1.18
 golang.org/x/crypto/pbkdf2
 # golang.org/x/lint v0.0.0-20210508222113-6edffad5e616

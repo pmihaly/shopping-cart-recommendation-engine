@@ -47,7 +47,9 @@ assert port is not None
 database = os.environ.get("PGDATABASE")
 assert database is not None
 
-logger.info("Got environment variables", user=user, host=host, port=port, database=database)
+logger.info(
+    "Got environment variables", user=user, host=host, port=port, database=database
+)
 
 conn = psycopg2.connect(
     user=user, password=password, host=host, port=port, database=database
