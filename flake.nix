@@ -123,10 +123,11 @@
             tag = "latest";
             copyToRoot = pkgs.buildEnv {
               name = "image-root";
-              paths = scriptDeps ++ [ ./seed ./scripts ];
+              paths = scriptDeps ++ [ ./seed ./scripts pkgs.coreutils ];
               pathsToLink = [ "/bin" "/" ];
             };
-            config = { Cmd = [ "/bin/python" "/flipkart-products-to-db.py" ]; };
+            config.Cmd = [ "/bin/python" "/initdb_lambda_scripts/initdb_lambda.py" ];
+            # config.Cmd = [ "${pkgs.bashInteractive}/bin/bash" ];
           };
         };
 

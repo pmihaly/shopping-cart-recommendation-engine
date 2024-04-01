@@ -120,6 +120,21 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 	lambdaRole := lambda.Role()
 	lambdaRole.AddToPrincipalPolicy(lambdaPolicyStatement)
 
+	api := awsapigateway.NewLambdaRestApi(stack, jsii.String("CartRecommApi"), &awsapigateway.LambdaRestApiProps{
+		Handler: lambda,
+		Proxy:   jsii.Bool(true),
+	})
+
+	api.Root().AddMethod(jsii.String("GET"), awsapigateway.NewLambdaIntegration(lambda, &awsapigateway.LambdaIntegrationOptions{
+		PassthroughBehavior: awsapigateway.PassthroughBehavior_WHEN_NO_MATCH,
+		RequestTemplates: &map[string]*string{
+			*jsii.String("application/json"): jsii.String("{\"statusCode\":200}"),
+		},
+	}), &awsapigateway.MethodOptions{
+		AuthorizationType: awsapigateway.AuthorizationType_NONE,
+		ApiKeyRequired:    jsii.Bool(false),
+	})
+
 	ecrRepositoryArn := awscdk.Fn_ImportValue(jsii.String("CartRecommRepositoryArn"))
 	ecrRepositoryName := awscdk.Fn_ImportValue(jsii.String("CartRecommRepositoryName"))
 
@@ -145,8 +160,9 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 			*jsii.String("PGHOST"):                dbInstance.InstanceEndpoint().Hostname(),
 			*jsii.String("PGPORT"):                jsii.String("5432"),
 			*jsii.String("PGUSER"):                jsii.String("postgres"),
-			*jsii.String("PGDATABASE"):            jsii.String("CartRecomm"),
+			*jsii.String("PGDATABASE"):            jsii.String("cartrecommendationengine"),
 			*jsii.String("PGPASSWORD_SECRET_ARN"): dbSecret.SecretArn(),
+			*jsii.String("SERVICE_URL"):           api.Url(),
 		},
 		SecurityGroups: &[]awsec2.ISecurityGroup{lambdaSecurityGroup},
 		Timeout:        awscdk.Duration_Seconds(jsii.Number(10)),
@@ -164,21 +180,6 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 	rule.AddTarget(awseventstargets.NewLambdaFunction(initdbLambda, &awseventstargets.LambdaFunctionProps{
 		RetryAttempts: jsii.Number(2),
 	}))
-
-	api := awsapigateway.NewLambdaRestApi(stack, jsii.String("CartRecommApi"), &awsapigateway.LambdaRestApiProps{
-		Handler: lambda,
-		Proxy:   jsii.Bool(true),
-	})
-
-	api.Root().AddMethod(jsii.String("GET"), awsapigateway.NewLambdaIntegration(lambda, &awsapigateway.LambdaIntegrationOptions{
-		PassthroughBehavior: awsapigateway.PassthroughBehavior_WHEN_NO_MATCH,
-		RequestTemplates: &map[string]*string{
-			*jsii.String("application/json"): jsii.String("{\"statusCode\":200}"),
-		},
-	}), &awsapigateway.MethodOptions{
-		AuthorizationType: awsapigateway.AuthorizationType_NONE,
-		ApiKeyRequired:    jsii.Bool(false),
-	})
 
 	awscdk.NewCfnOutput(stack, jsii.String("ApiUrl"), &awscdk.CfnOutputProps{
 		Value: api.Url(),

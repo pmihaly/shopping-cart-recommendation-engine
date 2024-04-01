@@ -1,5 +1,6 @@
 import asyncio
 import itertools
+import os
 import random
 from math import floor
 from uuid import uuid4
@@ -26,11 +27,13 @@ profiles = [
     "office",
 ]
 
+SERVICE_URL = os.getenv("SERVICE_URL", "http://127.0.0.1:8090")
+
 
 async def get_products_for_profile(search_term: str) -> list[str]:
     async with AsyncClient() as client:
         res = await client.get(
-            "http://127.0.0.1:8090/products/search",
+            f"{SERVICE_URL}/products/search",
             params=dict(q=search_term, take=500),
         )
         res.raise_for_status()
@@ -44,12 +47,12 @@ async def checkout_cart(items: list[str], semaphore: asyncio.Semaphore):
 
         for item in items:
             res = await client.put(
-                f"http://127.0.0.1:8090/carts/{cart_id}/items/{item}",
+                f"{SERVICE_URL}/carts/{cart_id}/items/{item}",
             )
             res.raise_for_status()
 
         res = await client.post(
-            f"http://127.0.0.1:8090/carts/{cart_id}/checkout",
+            f"{SERVICE_URL}/carts/{cart_id}/checkout",
         )
         res.raise_for_status()
 
