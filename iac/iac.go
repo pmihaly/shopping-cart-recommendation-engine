@@ -58,6 +58,14 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 		},
 	})
 
+	awsec2.NewInterfaceVpcEndpoint(stack, jsii.String("SecretsManagerEndpoint"), &awsec2.InterfaceVpcEndpointProps{
+		Service: awsec2.InterfaceVpcEndpointAwsService_SECRETS_MANAGER(),
+		Vpc:     vpc,
+		Subnets: &awsec2.SubnetSelection{
+			SubnetType: awsec2.SubnetType_PRIVATE_ISOLATED,
+		},
+	})
+
 	dbSecret := awssecretsmanager.NewSecret(stack, jsii.String("TemplatedSecret"), &awssecretsmanager.SecretProps{
 		GenerateSecretString: &awssecretsmanager.SecretStringGenerator{
 			ExcludeCharacters: jsii.String("/@\""),
@@ -119,7 +127,7 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 	})
 
 	initdbImageTag := awscdk.NewCfnParameter(stack, jsii.String("InitDBImageTag"), &awscdk.CfnParameterProps{
-		Type: jsii.String("String"),
+		Type:    jsii.String("String"),
 		Default: jsii.String("latest"),
 	})
 
@@ -128,6 +136,9 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 			TagOrDigest: initdbImageTag.ValueAsString(),
 		}),
 		Vpc: vpc,
+		VpcSubnets: &awsec2.SubnetSelection{
+			SubnetType: awsec2.SubnetType_PRIVATE_ISOLATED,
+		},
 		Environment: &map[string]*string{
 			*jsii.String("PGHOST"):                dbInstance.InstanceEndpoint().Hostname(),
 			*jsii.String("PGPORT"):                jsii.String("5432"),
@@ -136,6 +147,7 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 			*jsii.String("PGPASSWORD_SECRET_ARN"): dbSecret.SecretArn(),
 		},
 		SecurityGroups: &[]awsec2.ISecurityGroup{lambdaSecurityGroup},
+		Timeout:        awscdk.Duration_Seconds(jsii.Number(10)),
 	})
 
 	initdbLambda.Role().AddToPrincipalPolicy(lambdaPolicyStatement)

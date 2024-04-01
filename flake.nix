@@ -10,19 +10,22 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         deps = with pkgs; [ go ];
-        scriptDeps = with pkgs; [ nushellFull nodejs_20 ];
+        scriptDeps = with pkgs; [
+          (pkgs.python312.withPackages (p: [
+            p.httpx
+            p.structlog
+            p.tqdm
+            p.uuid
+            p.psycopg2
+            p.types-psycopg2
+            p.boto3
+            p.mypy-boto3-secretsmanager
+          ]))
+          nushellFull
+          nodejs_20
+        ];
         devDeps = with pkgs;
-          [
-            (pkgs.python312.withPackages (p: [
-              p.httpx
-              p.icecream
-              p.tqdm
-              p.uuid
-              p.psycopg2
-              p.types-psycopg2
-              p.boto3
-              p.mypy-boto3-secretsmanager
-            ]))
+          scriptDeps ++ [
             postgresql
             sqlc
             entr
@@ -39,7 +42,7 @@
                 printf "%s\n" "$FIXED_PACKAGE_JSON" > package.json
               '';
             }))
-          ] ++ scriptDeps;
+          ];
 
         sqlformat = {
           language = "postgresql";
@@ -123,10 +126,7 @@
               paths = scriptDeps ++ [ ./seed ./scripts ];
               pathsToLink = [ "/bin" "/" ];
             };
-            config = {
-              Cmd = [ "${pkgs.nushell}/bin/nu" ];
-              ExposedPorts = { "8090/tcp" = { }; };
-            };
+            config = { Cmd = [ "/bin/python" "/flipkart-products-to-db.py" ]; };
           };
         };
 
