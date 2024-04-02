@@ -120,12 +120,55 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 	lambdaRole := lambda.Role()
 	lambdaRole.AddToPrincipalPolicy(lambdaPolicyStatement)
 
-	api := awsapigateway.NewLambdaRestApi(stack, jsii.String("CartRecommApi"), &awsapigateway.LambdaRestApiProps{
+	privateLambdaPolicy := awsiam.NewPolicyStatement(&awsiam.PolicyStatementProps{
+		Effect:     awsiam.Effect_ALLOW,
+		Principals: &[]awsiam.IPrincipal{awsiam.NewAnyPrincipal()},
+		Actions:    jsii.Strings("execute-api:Invoke"),
+		Resources:  &[]*string{jsii.String("execute-api:/*")},
+		Conditions: &map[string]interface{}{
+			"StringEquals": &map[string]*string{
+				"aws:sourceVpce": vpc.VpcArn(),
+			},
+		},
+	})
+
+	privateApi := awsapigateway.NewLambdaRestApi(stack, jsii.String("CartRecommPrivateApi"), &awsapigateway.LambdaRestApiProps{
+		Handler: lambda,
+		Proxy:   jsii.Bool(true),
+		EndpointConfiguration: &awsapigateway.EndpointConfiguration{
+			Types: &[]awsapigateway.EndpointType{awsapigateway.EndpointType_PRIVATE},
+		},
+
+		Policy: awsiam.NewPolicyDocument(
+			&awsiam.PolicyDocumentProps{
+				Statements: &[]awsiam.PolicyStatement{privateLambdaPolicy},
+			},
+		),
+	})
+	privateApi.Root().AddMethod(jsii.String("GET"), awsapigateway.NewLambdaIntegration(lambda, &awsapigateway.LambdaIntegrationOptions{
+		PassthroughBehavior: awsapigateway.PassthroughBehavior_WHEN_NO_MATCH,
+		RequestTemplates: &map[string]*string{
+			*jsii.String("application/json"): jsii.String("{\"statusCode\":200}"),
+		},
+	}), &awsapigateway.MethodOptions{
+		AuthorizationType: awsapigateway.AuthorizationType_NONE,
+		ApiKeyRequired:    jsii.Bool(false),
+	})
+
+	awsec2.NewInterfaceVpcEndpoint(stack, jsii.String("ApiEndpoint"), &awsec2.InterfaceVpcEndpointProps{
+		Service: awsec2.InterfaceVpcEndpointAwsService_APIGATEWAY(),
+		Vpc:     vpc,
+		Subnets: &awsec2.SubnetSelection{
+			SubnetType: awsec2.SubnetType_PRIVATE_ISOLATED,
+		},
+	})
+
+	publicApi := awsapigateway.NewLambdaRestApi(stack, jsii.String("CartRecommApi"), &awsapigateway.LambdaRestApiProps{
 		Handler: lambda,
 		Proxy:   jsii.Bool(true),
 	})
 
-	api.Root().AddMethod(jsii.String("GET"), awsapigateway.NewLambdaIntegration(lambda, &awsapigateway.LambdaIntegrationOptions{
+	publicApi.Root().AddMethod(jsii.String("GET"), awsapigateway.NewLambdaIntegration(lambda, &awsapigateway.LambdaIntegrationOptions{
 		PassthroughBehavior: awsapigateway.PassthroughBehavior_WHEN_NO_MATCH,
 		RequestTemplates: &map[string]*string{
 			*jsii.String("application/json"): jsii.String("{\"statusCode\":200}"),
@@ -162,7 +205,7 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 			*jsii.String("PGUSER"):                jsii.String("postgres"),
 			*jsii.String("PGDATABASE"):            jsii.String("cartrecommendationengine"),
 			*jsii.String("PGPASSWORD_SECRET_ARN"): dbSecret.SecretArn(),
-			*jsii.String("SERVICE_URL"):           api.Url(),
+			*jsii.String("SERVICE_URL"):           privateApi.Url(),
 		},
 		SecurityGroups: &[]awsec2.ISecurityGroup{lambdaSecurityGroup},
 		Timeout:        awscdk.Duration_Seconds(jsii.Number(60)),
@@ -173,6 +216,7 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 	rule := awsevents.NewRule(stack, jsii.String("initdbSchedule"), &awsevents.RuleProps{
 		Schedule: awsevents.Schedule_Cron(
 			&awsevents.CronOptions{
+				Minute:  jsii.String("*"),
 				WeekDay: jsii.String("SUN"),
 			},
 		)})
@@ -182,7 +226,7 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 	}))
 
 	awscdk.NewCfnOutput(stack, jsii.String("ApiUrl"), &awscdk.CfnOutputProps{
-		Value: api.Url(),
+		Value: publicApi.Url(),
 	})
 
 	return stack

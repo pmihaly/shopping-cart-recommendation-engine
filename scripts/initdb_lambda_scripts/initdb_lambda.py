@@ -10,7 +10,6 @@ logger.info("Started db initianization")
 
 runtime_api = os.environ["AWS_LAMBDA_RUNTIME_API"]
 
-
 res = httpx.get(f"http://{runtime_api}/2018-06-01/runtime/invocation/next")
 request_id = res.headers["Lambda-Runtime-Aws-Request-Id"]
 

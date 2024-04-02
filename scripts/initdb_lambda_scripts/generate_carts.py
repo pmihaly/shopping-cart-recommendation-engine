@@ -5,8 +5,11 @@ import random
 from math import floor
 from uuid import uuid4
 
+import structlog
 from httpx import AsyncClient
 from tqdm.asyncio import tqdm_asyncio
+
+logger = structlog.stdlib.get_logger()
 
 profiles = [
     "spongebob",
@@ -62,6 +65,9 @@ def get_cart_number_of_products(len_of_products: int) -> int:
 
 
 async def main():
+    logger.info("Got environment variables", SERVICE_URL=SERVICE_URL)
+    logger.info("Starting to generate carts")
+
     product_by_profiles = await asyncio.gather(
         *(get_products_for_profile(profile) for profile in profiles)
     )
