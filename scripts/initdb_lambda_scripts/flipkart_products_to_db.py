@@ -42,11 +42,6 @@ conn = psycopg2.connect(
 cur = conn.cursor()
 logger.info("Connected to PostgreSQL")
 
-conn.autocommit = True
-
-cur.execute(f"drop database if exists {database}")
-logger.info("Deleted database", database=database)
-
 sql_files = os.listdir("/postgres")
 
 logger.debug("Executing all sql files in /postgres", sql_files=sql_files)
