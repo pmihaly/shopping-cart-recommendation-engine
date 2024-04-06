@@ -58,6 +58,7 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 				SubnetType: awsec2.SubnetType_PRIVATE_ISOLATED,
 			},
 		},
+		MaxAzs: jsii.Number(1),
 	})
 
 	awsec2.NewInterfaceVpcEndpoint(stack, jsii.String("SecretsManagerEndpoint"), &awsec2.InterfaceVpcEndpointProps{
@@ -120,30 +121,12 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 	lambdaRole := lambda.Role()
 	lambdaRole.AddToPrincipalPolicy(lambdaPolicyStatement)
 
-	privateLambdaPolicy := awsiam.NewPolicyStatement(&awsiam.PolicyStatementProps{
-		Effect:     awsiam.Effect_ALLOW,
-		Principals: &[]awsiam.IPrincipal{awsiam.NewAnyPrincipal()},
-		Actions:    jsii.Strings("execute-api:Invoke"),
-		Resources:  &[]*string{jsii.String("execute-api:/*")},
-		Conditions: &map[string]interface{}{
-			"StringEquals": &map[string]*string{
-				"aws:sourceVpce": vpc.VpcArn(),
-			},
-		},
-	})
-
 	privateApi := awsapigateway.NewLambdaRestApi(stack, jsii.String("CartRecommPrivateApi"), &awsapigateway.LambdaRestApiProps{
 		Handler: lambda,
 		Proxy:   jsii.Bool(true),
 		EndpointConfiguration: &awsapigateway.EndpointConfiguration{
 			Types: &[]awsapigateway.EndpointType{awsapigateway.EndpointType_PRIVATE},
 		},
-
-		Policy: awsiam.NewPolicyDocument(
-			&awsiam.PolicyDocumentProps{
-				Statements: &[]awsiam.PolicyStatement{privateLambdaPolicy},
-			},
-		),
 	})
 	privateApi.Root().AddMethod(jsii.String("GET"), awsapigateway.NewLambdaIntegration(lambda, &awsapigateway.LambdaIntegrationOptions{
 		PassthroughBehavior: awsapigateway.PassthroughBehavior_WHEN_NO_MATCH,
@@ -212,6 +195,13 @@ func NewIacStack(scope constructs.Construct, id string, props *IacStackProps) aw
 	})
 
 	initdbLambda.Role().AddToPrincipalPolicy(lambdaPolicyStatement)
+
+	privateLambdaPolicy := awsiam.NewPolicyStatement(&awsiam.PolicyStatementProps{
+		Effect:     awsiam.Effect_ALLOW,
+		Actions:    jsii.Strings("execute-api:Invoke"),
+		Resources:  &[]*string{privateApi.ArnForExecuteApi(jsii.String("*"), jsii.String("/*"), jsii.String("*"))},
+	})
+	initdbLambda.Role().AddToPrincipalPolicy(privateLambdaPolicy)
 
 	rule := awsevents.NewRule(stack, jsii.String("initdbSchedule"), &awsevents.RuleProps{
 		Schedule: awsevents.Schedule_Cron(
