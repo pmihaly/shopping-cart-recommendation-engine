@@ -35,11 +35,17 @@ SERVICE_URL = os.getenv("SERVICE_URL", "http://127.0.0.1:8090")
 
 async def get_products_for_profile(search_term: str) -> list[str]:
     async with AsyncClient() as client:
+        logger.debug("Searching for products", search_term=search_term)
         res = await client.get(
             f"{SERVICE_URL}/products/search",
             params=dict(q=search_term, take=500),
         )
-        res.raise_for_status()
+        try:
+            res.raise_for_status()
+        except Exception as e:
+            logger.error("Failed to get products", search_term=search_term, error=e, response=res.text)
+            exit(1)
+        logger.info("Got products")
 
     return [item["ID"] for item in res.json()["Items"]]
 
